@@ -24,6 +24,12 @@ public class PlayerController : MonoBehaviour {
 	Health myHealth;
 	int maxHealth = 100;
 
+	bool dashing = false;
+	float dashSpeedMultiplier = 2;
+	float dashDistance = 10;
+	Vector3 dashStart;
+
+	public Ability testAbility;
 
 
 	// Use this for initialization
@@ -45,11 +51,35 @@ public class PlayerController : MonoBehaviour {
 				shieldBash ();
 			}
 		}
+		if (Input.GetButtonDown ("Ability1") ) {
+			// default q
+
+		}
+		if (Input.GetButtonDown ("Ability2")) {
+			// default e
+			testAbility.useAbility();
+		}
+		if (Input.GetButtonDown ("Ability3")) {
+			// default r
+			if (!dashing) {
+				dashAbility ();
+			}
+		}
+		if (Input.GetButtonDown ("Ability4")) {
+			// default f
+		}
 	}
 	
 	// Update is called once per frame
 	void FixedUpdate () {
-		moveDirection = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
+		if (!dashing) {
+			moveDirection = new Vector3 (Input.GetAxisRaw ("Horizontal"), 0, Input.GetAxisRaw ("Vertical"));
+		} else {
+			if (Vector3.Distance (transform.position, dashStart) > dashDistance) {
+				moveSpeed /= dashSpeedMultiplier;
+				dashing = false;
+			}
+		}
 		transform.position = Vector3.MoveTowards(transform.position, transform.position + moveDirection, moveSpeed);
 
 		Ray cameraRay = Camera.main.ScreenPointToRay (Input.mousePosition);
@@ -96,6 +126,17 @@ public class PlayerController : MonoBehaviour {
 
 		//shieldAnim.SetBool ("isSmashing", false);
 
+	}
+
+	void dashAbility()
+	{
+		//Debug.Log ("Dashing");
+		dashing = true;
+		moveSpeed *= dashSpeedMultiplier;
+		dashStart = transform.position;
+
+		// dash in direction of mouse
+		// moveDirection = new Vector3(
 	}
 
 	public void die()

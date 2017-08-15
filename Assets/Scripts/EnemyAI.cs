@@ -8,7 +8,7 @@ public class EnemyAI : MonoBehaviour {
 	DecisionDelegate enemyAction;
 
 	float timeBetweenDecisions = 0.15f;
-	float timeSinceLastDecision = 0;
+	float timeOfNextDecision = 0;
 
 	EnemyController enemyController;
 
@@ -27,8 +27,8 @@ public class EnemyAI : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if (Time.time > timeSinceLastDecision + timeBetweenDecisions) {
-			timeSinceLastDecision = Time.time;
+		if (Time.time > timeOfNextDecision) {
+			timeOfNextDecision = Time.time +timeBetweenDecisions;
 			enemyAction ();
 		}
 	}

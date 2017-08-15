@@ -17,7 +17,7 @@ public class EnemyController : MonoBehaviour {
 
 	bool randomWalk = true;
 	float timeBetweenRandomWalks = 2;
-	float timeOfLastRandomWalk = 0;
+	float timeOfNextRandomWalk = 0;
 	float randomAngle = 0;
 	Vector3 randomPoint;
 	Vector3 spawnPoint;
@@ -57,14 +57,14 @@ public class EnemyController : MonoBehaviour {
 				}
 			}
 		} else {
-			// only look at the player when moving
-			transform.LookAt (player);
+			
 			// default to random walk when the player isn't nearby. This is governed by the EnemyAI
 			if (randomWalk) {
-				if (Time.time > timeOfLastRandomWalk + timeBetweenRandomWalks) {
+				transform.LookAt (randomPoint);
+				if (Time.time > timeOfNextRandomWalk) {
 					// every timeBetweenRandomWalks (default 2 seconds) find a random point near the spawn point.
 					// move towards that point
-					timeOfLastRandomWalk = Time.time;
+					timeOfNextRandomWalk = Time.time + timeBetweenRandomWalks;
 					// pick a random angle
 					randomAngle = Random.Range (0, 2 * Mathf.PI);
 					// turn that random angle into a position on the unit circle
@@ -76,6 +76,9 @@ public class EnemyController : MonoBehaviour {
 				Debug.DrawLine (transform.position, randomPoint);
 				transform.position = Vector3.MoveTowards (transform.position, randomPoint, moveSpeed);
 			} else {
+				// only look at the player when moving
+				// and only when moving towards player
+				transform.LookAt (player);
 				transform.position = Vector3.MoveTowards (transform.position, player.transform.position, moveSpeed);
 			}
 		}
