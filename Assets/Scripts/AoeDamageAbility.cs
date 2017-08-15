@@ -36,7 +36,6 @@ public class AoeDamageAbility : Ability {
 
 	void OnTriggerEnter(Collider col)
 	{
-		
 		if (col.GetComponent<Health> () != null) {
 			if (col.gameObject != self) {
 				col.GetComponent<Health> ().takeDamage (damage);

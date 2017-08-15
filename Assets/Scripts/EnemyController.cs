@@ -4,14 +4,19 @@ using UnityEngine;
 
 public class EnemyController : MonoBehaviour {
 
+	public delegate void deathDelegate();
+	public deathDelegate onDeath;
+
 	Transform player;
 	public float moveSpeed = 0.5f;
 
-	bool attacking = false;
-	float attackTime = 0.05f;
+
+	public bool attacking = false;
+	public bool rootedForAttack = false;
+	float attackWindUpTime = 0.05f;
 	float timeOfAttackStart = 0;
-	float timeBetweenAttacks = 0.75f;
-	float timeOfLastAttack = 0;
+	float timeBetweenAttacks = 0.85f;
+	float timeOfNextAttack = 0;
 	float damageDelayTime = 0.5f;
 	int attackDamage = 40;
 
@@ -43,12 +48,16 @@ public class EnemyController : MonoBehaviour {
 
 
 
-		if (attacking) {
+		if (rootedForAttack) {
+			transform.LookAt (player);
 			// if attacking, stop moving
-			// need to wait for attackTime seconds before you can start the swing
-			if (Time.time > timeOfAttackStart + attackTime) {
-				if (Time.time > timeOfLastAttack + timeBetweenAttacks) {
-					timeOfLastAttack = Time.time;
+
+			// moving this to its own function so it can change for different enemies
+			// need to wait for attackWindUpTime seconds before you can start the swing
+			/*
+			if (Time.time > timeOfAttackStart + attackWindUpTime) {
+				if (Time.time > timeOfNextAttack) {
+					timeOfNextAttack = Time.time + timeBetweenAttacks;
 					// attack;
 					//Debug.Log ("Attacking!");
 					Invoke("activateAttackArc", damageDelayTime);
@@ -56,6 +65,9 @@ public class EnemyController : MonoBehaviour {
 					//attacking = false;
 				}
 			}
+			*/
+		} else if(attacking) {
+			
 		} else {
 			
 			// default to random walk when the player isn't nearby. This is governed by the EnemyAI
@@ -88,7 +100,10 @@ public class EnemyController : MonoBehaviour {
 	public void die()
 	{
 		transform.position = spawnPoint;
+		attacking = false;
+		rootedForAttack = false;
 		health.resetHealth ();
+		onDeath ();
 	}
 
 	public void playerFound()
@@ -101,12 +116,41 @@ public class EnemyController : MonoBehaviour {
 		randomWalk = true;
 	}
 
+	bool canAttack()
+	{
+		return Time.time > timeOfNextAttack;
+	}
+
 	public void attackPlayer()
 	{
-		if (!attacking) {
-			attacking = true;
-			timeOfAttackStart = Time.time;
+		if (canAttack()) {
+			timeOfNextAttack = Time.time + timeBetweenAttacks;
+			// attacking = true;
+			rootedForAttack = true;
+			// set attacking to true so the enemy stops to try to attack the player
+			// attacking gets set to false when the player moves out of the attack range
+			// then the enemy can move again
+			//timeOfAttackStart = Time.time;
+
+			Invoke ("startAttack", attackWindUpTime);
+			// stop moving to cast attack for attackWindUpTime seconds
+			// Start animation
+			// swordAnim.SetTrigger ("SwordTrigger");
+			// Invoke damage trigger
+			// Invoke("activateAttackArc", damageDelayTime);
 		}
+	}
+
+	void startAttack()
+	{
+		
+		// stop moving to cast attack for attackWindUpTime seconds
+		// Start animation
+		attacking = true;
+		rootedForAttack = false;
+		swordAnim.SetTrigger ("SwordTrigger");
+		// Invoke damage trigger
+		Invoke("activateAttackArc", damageDelayTime);
 	}
 
 	public void stopAttacking()
@@ -117,6 +161,7 @@ public class EnemyController : MonoBehaviour {
 
 	void activateAttackArc()
 	{
+		
 		swordArc.SetActive(true);
 		Invoke ("disableAttackArc", 0.1f);
 	}
@@ -124,6 +169,8 @@ public class EnemyController : MonoBehaviour {
 	void disableAttackArc()
 	{
 		swordArc.SetActive(false);
+		// attack is finished, stop attacking so you can move again or queue up another attack
+
 	}
 
 	void OnDrawGizmos()

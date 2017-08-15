@@ -7,6 +7,8 @@ public class EnemyAI : MonoBehaviour {
 	delegate void DecisionDelegate();
 	DecisionDelegate enemyAction;
 
+	public TextMesh debugText;
+
 	float timeBetweenDecisions = 0.15f;
 	float timeOfNextDecision = 0;
 
@@ -23,6 +25,7 @@ public class EnemyAI : MonoBehaviour {
 		playerTrans = FindObjectOfType<PlayerController> ().transform;
 		enemyController = GetComponent<EnemyController> ();
 		//Invoke ("EnemyDecision", 2);
+		enemyController.onDeath += reset;
 	}
 	
 	// Update is called once per frame
@@ -30,7 +33,9 @@ public class EnemyAI : MonoBehaviour {
 		if (Time.time > timeOfNextDecision) {
 			timeOfNextDecision = Time.time +timeBetweenDecisions;
 			enemyAction ();
+			debugText.text = enemyAction.Method.ToString();
 		}
+
 	}
 
 	void RandomWalk() {
@@ -57,6 +62,11 @@ public class EnemyAI : MonoBehaviour {
 			enemyAction = RandomWalk;
 		}
 
+	}
+
+	void reset()
+	{
+		enemyAction = RandomWalk;
 	}
 
 	void OnDrawGizmos()

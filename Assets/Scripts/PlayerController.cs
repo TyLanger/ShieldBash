@@ -30,7 +30,9 @@ public class PlayerController : MonoBehaviour {
 	Vector3 dashStart;
 
 	public Ability testAbility;
+	public ProjectileController ball;
 
+	Vector3 lookPoint;
 
 	// Use this for initialization
 	void Start () {
@@ -53,7 +55,9 @@ public class PlayerController : MonoBehaviour {
 		}
 		if (Input.GetButtonDown ("Ability1") ) {
 			// default q
-
+			var ballCopy = Instantiate(ball.gameObject, transform.position, transform.rotation);
+			ballCopy.GetComponent<ProjectileController>().moveTo(lookPoint, gameObject);
+			//ball.GetComponent<ProjectileController>().moveTo(lookPoint);
 		}
 		if (Input.GetButtonDown ("Ability2")) {
 			// default e
@@ -87,7 +91,7 @@ public class PlayerController : MonoBehaviour {
 		float cameraDist;
 
 		if (eyePlane.Raycast (cameraRay, out cameraDist)) {
-			Vector3 lookPoint = cameraRay.GetPoint (cameraDist);
+			lookPoint = cameraRay.GetPoint (cameraDist);
 			// use the tansform pos instead of the look point for the y so the player doesn't try to look down.
 			transform.LookAt (new Vector3(lookPoint.x, transform.position.y, lookPoint.z));
 		}
