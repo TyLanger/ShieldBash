@@ -7,7 +7,7 @@ public class ProjectileController : MonoBehaviour {
 	float moveSpeed = 0.5f;
 	float maxDistance = 10f;
 	float apexHeight = 2;
-	float timeAlive = 2f;
+	float timeAlive = 23f;
 
 	Vector3 spawnPoint;
 	Vector3 movePosition;
@@ -38,7 +38,7 @@ public class ProjectileController : MonoBehaviour {
 			}
 			timeAlive -= Time.deltaTime;
 			transform.position = Vector3.MoveTowards (transform.position, movePosition, moveSpeed);
-			child.transform.position = new Vector3 (child.transform.position.x, apexHeight * curve.Evaluate(Vector3.Distance(transform.position, movePosition)/Vector3.Distance(spawnPoint, movePosition)), child.transform.position.z);
+			child.transform.position = new Vector3 (child.transform.position.x, apexHeight * curve.Evaluate((Vector3.Distance(transform.position, movePosition)/Vector3.Distance(spawnPoint, movePosition))), child.transform.position.z);
 		}
 
 	}
@@ -71,10 +71,15 @@ public class ProjectileController : MonoBehaviour {
 		}
 	}
 
+	public void setDamage(int d)
+	{
+		damage = d;
+	}
+
 	void OnDrawGizmos()
 	{
 		//Gizmos.DrawSphere (transform.position, 1f);
-		Gizmos.DrawWireSphere (transform.position, 1f);
+		Gizmos.DrawWireSphere (transform.position, 0.5f);
 	}
 
 }

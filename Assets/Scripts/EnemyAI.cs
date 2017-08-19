@@ -46,11 +46,20 @@ public class EnemyAI : MonoBehaviour {
 	}
 
 	void Attack() {
-		enemyController.attackPlayer ();
+		
 		if (Vector3.Distance (transform.position, playerTrans.position) > attackDist) {
 			enemyController.stopAttacking ();
 			enemyAction = MoveTowardsPlayer;
 		}
+		// this needs to be after
+		// in the case where last decision, the enemy could attack (so this method is being called)
+		// but THIS decision time the player is too far away
+		// if attackPlayer() is first, it will start the attack
+		// then the if will be true
+		// inside the if, stopAttacking is called which sets attacking to false
+		// attackPlayer sets attacking to true after a 0.05s delay
+		// therefore, the enemy gets stuck attacking forever and can't move
+		enemyController.attackPlayer ();
 	}
 
 	void MoveTowardsPlayer()

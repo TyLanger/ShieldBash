@@ -31,6 +31,7 @@ public class PlayerController : MonoBehaviour {
 
 	public Ability testAbility;
 	public ProjectileController ball;
+	public Ability projectileAbility;
 
 	Vector3 lookPoint;
 
@@ -55,8 +56,9 @@ public class PlayerController : MonoBehaviour {
 		}
 		if (Input.GetButtonDown ("Ability1") ) {
 			// default q
-			var ballCopy = Instantiate(ball.gameObject, transform.position, transform.rotation);
-			ballCopy.GetComponent<ProjectileController>().moveTo(lookPoint, gameObject);
+			//var ballCopy = Instantiate(ball.gameObject, transform.position, transform.rotation);
+			//ballCopy.GetComponent<ProjectileController>().moveTo(lookPoint, gameObject);
+			projectileAbility.useAbility (transform, lookPoint);
 			//ball.GetComponent<ProjectileController>().moveTo(lookPoint);
 		}
 		if (Input.GetButtonDown ("Ability2")) {

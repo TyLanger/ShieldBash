@@ -14,7 +14,6 @@ public class EnemyController : MonoBehaviour {
 	public bool attacking = false;
 	public bool rootedForAttack = false;
 	float attackWindUpTime = 0.05f;
-	float timeOfAttackStart = 0;
 	float timeBetweenAttacks = 0.85f;
 	float timeOfNextAttack = 0;
 	float damageDelayTime = 0.5f;

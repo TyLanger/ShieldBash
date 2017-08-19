@@ -5,12 +5,14 @@ using UnityEngine;
 public class AoeDamageAbility : Ability {
 
 
-	int damage = 20;
+
 	GameObject self;
 
 	void Start() {
-		base.cooldown = 2;
+		// useAbility happens first then start
+		// start will happen before OnTriggerEnter happens
 		self = GetComponentInParent<PlayerController> ().gameObject;
+
 	}
 
 

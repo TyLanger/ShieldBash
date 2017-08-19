@@ -4,14 +4,19 @@ using UnityEngine;
 
 public class Ability : MonoBehaviour {
 
-	protected float cooldown = 0;
-	float timeNextReady = 0;
-
+	public int damage = 0;
+	public float cooldown = 0;
+	public float timeNextReady = 0;
 
 
 	public virtual void useAbility()
 	{
 		timeNextReady = Time.time + cooldown;
+	}
+
+	public virtual void useAbility(Transform spawnPoint, Vector3 aimPoint)
+	{
+
 	}
 
 	protected bool isReady()
