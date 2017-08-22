@@ -7,7 +7,7 @@ public class ProjectileController : MonoBehaviour {
 	float moveSpeed = 0.5f;
 	float maxDistance = 10f;
 	float apexHeight = 2;
-	float timeAlive = 23f;
+	float timeAlive = 2f;
 
 	Vector3 spawnPoint;
 	Vector3 movePosition;

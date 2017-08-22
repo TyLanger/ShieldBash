@@ -12,7 +12,6 @@ public class SpawnAbility : Ability {
 
 	public override void useAbility(Transform spawnPoint, Vector3 aimPoint)
 	{
-
 		if (isReady ()) {
 			base.useAbility ();
 			var projectileCopy = Instantiate (projectile.gameObject, spawnPoint.position, spawnPoint.rotation);

@@ -13,11 +13,17 @@ public class EnemyController : MonoBehaviour {
 
 	public bool attacking = false;
 	public bool rootedForAttack = false;
-	float attackWindUpTime = 0.05f;
-	float timeBetweenAttacks = 0.85f;
 	float timeOfNextAttack = 0;
-	float damageDelayTime = 0.5f;
-	int attackDamage = 40;
+
+	// can be modified by child classes
+	// time enemy is rooted for while still being able to aim
+	float attackWindUpTime = 0.05f;
+	// time between attacks. Counts from start of attacks
+	protected float timeBetweenAttacks = 0.85f;
+	// time between animation starting and collider being turned on and damage being applied
+	// cannot adjust aim during this time
+	protected float damageDelayTime = 0.5f;
+	protected int attackDamage = 40;
 
 	bool randomWalk = true;
 	float timeBetweenRandomWalks = 2;
@@ -27,17 +33,17 @@ public class EnemyController : MonoBehaviour {
 	Vector3 spawnPoint;
 	float spawnRadius = 3;
 
-	public Transform sword;
-	Animator swordAnim;
+	public Transform weapon;
+	Animator weaponAnim;
 	public GameObject swordArc;
 
 	Health health;
 
 	// Use this for initialization
-	void Start () {
+	protected virtual void Start () {
 		player = FindObjectOfType<PlayerController> ().transform;
 		spawnPoint = transform.position;
-		swordAnim = sword.GetComponent<Animator> ();
+		weaponAnim = weapon.GetComponent<Animator> ();
 		health = GetComponent<Health> ();
 		health.onDeath += die;
 	}
@@ -147,26 +153,26 @@ public class EnemyController : MonoBehaviour {
 		// Start animation
 		attacking = true;
 		rootedForAttack = false;
-		swordAnim.SetTrigger ("SwordTrigger");
+		weaponAnim.SetTrigger ("SwordTrigger");
 		// Invoke damage trigger
 		Invoke("activateAttackArc", damageDelayTime);
 	}
 
 	public void stopAttacking()
 	{
-		attacking = false;
 		disableAttackArc ();
 	}
 
-	void activateAttackArc()
+	protected virtual void activateAttackArc()
 	{
 		
 		swordArc.SetActive(true);
 		Invoke ("disableAttackArc", 0.1f);
 	}
 
-	void disableAttackArc()
+	protected virtual void disableAttackArc()
 	{
+		attacking = false;
 		swordArc.SetActive(false);
 		// attack is finished, stop attacking so you can move again or queue up another attack
 
