@@ -30,7 +30,6 @@ public class PlayerController : MonoBehaviour {
 	Vector3 dashStart;
 
 	public Ability testAbility;
-	public ProjectileController ball;
 	public Ability projectileAbility;
 
 	Vector3 lookPoint;
@@ -54,12 +53,13 @@ public class PlayerController : MonoBehaviour {
 				shieldBash ();
 			}
 		}
+		if(Input.GetButtonDown("Fire2")) {
+			// right click
+		}
 		if (Input.GetButtonDown ("Ability1") ) {
 			// default q
-			//var ballCopy = Instantiate(ball.gameObject, transform.position, transform.rotation);
-			//ballCopy.GetComponent<ProjectileController>().moveTo(lookPoint, gameObject);
+			// set the point where it should spawn and the place it should travel to
 			projectileAbility.useAbility (transform, lookPoint);
-			//ball.GetComponent<ProjectileController>().moveTo(lookPoint);
 		}
 		if (Input.GetButtonDown ("Ability2")) {
 			// default e
