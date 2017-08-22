@@ -7,6 +7,7 @@ public class EnemyAI : MonoBehaviour {
 	delegate void DecisionDelegate();
 	DecisionDelegate enemyAction;
 
+
 	public TextMesh debugText;
 
 	float timeBetweenDecisions = 0.15f;
@@ -21,6 +22,7 @@ public class EnemyAI : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		debugText.text = "";
 		enemyAction = RandomWalk;
 		playerTrans = FindObjectOfType<PlayerController> ().transform;
 		enemyController = GetComponent<EnemyController> ();
@@ -34,6 +36,8 @@ public class EnemyAI : MonoBehaviour {
 			timeOfNextDecision = Time.time +timeBetweenDecisions;
 			enemyAction ();
 			debugText.text = enemyAction.Method.ToString();
+			debugText.gameObject.SetActive (false);
+
 		}
 
 	}
@@ -80,6 +84,9 @@ public class EnemyAI : MonoBehaviour {
 
 	void OnDrawGizmos()
 	{
+		
+		debugText.gameObject.SetActive (true);
+
 		UnityEditor.Handles.color = Color.red;
 		UnityEditor.Handles.DrawWireDisc (transform.position, Vector3.up, aggroDist);
 
