@@ -15,6 +15,7 @@ public class PlayerController : MonoBehaviour {
 	public Transform shield;
 	public Transform shieldLeft;
 	public Transform shieldRight;
+	float rayDistance = 4.2f;
 
 	int shieldDamage = 50;
 
@@ -31,6 +32,7 @@ public class PlayerController : MonoBehaviour {
 
 	public Ability testAbility;
 	public Ability projectileAbility;
+	public Ability bombAbility;
 
 	Vector3 lookPoint;
 
@@ -59,7 +61,7 @@ public class PlayerController : MonoBehaviour {
 		if (Input.GetButtonDown ("Ability1") ) {
 			// default q
 			// set the point where it should spawn and the place it should travel to
-			projectileAbility.useAbility (transform, lookPoint);
+			projectileAbility.useAbility (transform, lookPoint, true);
 		}
 		if (Input.GetButtonDown ("Ability2")) {
 			// default e
@@ -73,6 +75,7 @@ public class PlayerController : MonoBehaviour {
 		}
 		if (Input.GetButtonDown ("Ability4")) {
 			// default f
+			bombAbility.useAbility(transform, lookPoint, false);
 		}
 	}
 	
@@ -111,14 +114,14 @@ public class PlayerController : MonoBehaviour {
 		Vector3 rayOrigin = shield.transform.position;
 
 		// Fire forward from the direction the shield is facing
-		Debug.DrawRay (rayOrigin, shield.transform.forward * 3.0f, Color.red);
-		Debug.DrawRay (shieldLeft.position, shield.transform.forward * 3.0f, Color.green);
-		Debug.DrawRay (shieldRight.position, shield.transform.forward * 3.0f, Color.blue);
+		Debug.DrawRay (rayOrigin, shield.transform.forward * rayDistance, Color.red);
+		Debug.DrawRay (shieldLeft.position, shield.transform.forward * rayDistance, Color.green);
+		Debug.DrawRay (shieldRight.position, shield.transform.forward * rayDistance, Color.blue);
 
 		// if any of the rays hits something
 		// seems to work
 		// The one that hits should return true and continue the if. It should also be the one that stored something in hit last
-		if (Physics.Raycast (rayOrigin, shield.transform.forward, out hit, 3.0f) || Physics.Raycast (shieldLeft.position, shield.transform.forward, out hit, 3.0f) || Physics.Raycast (shieldRight.position, shield.transform.forward, out hit, 3.0f)) {
+		if (Physics.Raycast (rayOrigin, shield.transform.forward, out hit, rayDistance) || Physics.Raycast (shieldLeft.position, shield.transform.forward, out hit, rayDistance) || Physics.Raycast (shieldRight.position, shield.transform.forward, out hit, rayDistance)) {
 			//Debug.Log ("Ray hit something "+hit.collider.ToString());
 			/*
 			EnemyController enemyHit = hit.transform.GetComponent<EnemyController> ();

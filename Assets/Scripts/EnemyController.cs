@@ -31,7 +31,7 @@ public class EnemyController : MonoBehaviour {
 	float randomAngle = 0;
 	Vector3 randomPoint;
 	Vector3 spawnPoint;
-	float spawnRadius = 3;
+	float spawnRadius = 5;
 
 	public Transform weapon;
 	Animator weaponAnim;

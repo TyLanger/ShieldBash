@@ -11,8 +11,8 @@ public class AoeDamageAbility : Ability {
 	void Start() {
 		// useAbility happens first then start
 		// start will happen before OnTriggerEnter happens
-		self = GetComponentInParent<PlayerController> ().gameObject;
-
+		//self = GetComponentInParent<PlayerController> ().gameObject;
+		self = transform.parent.gameObject;
 	}
 
 

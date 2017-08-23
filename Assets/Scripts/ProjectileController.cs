@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class ProjectileController : MonoBehaviour {
 
-	float moveSpeed = 0.5f;
-	float maxDistance = 10f;
+	float moveSpeed = 1f;
+	float maxDistance = 20f;
 	float apexHeight = 2;
 	float timeAlive = 2f;
 
