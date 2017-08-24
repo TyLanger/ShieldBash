@@ -14,7 +14,7 @@ public class Ability : MonoBehaviour {
 		timeNextReady = Time.time + cooldown;
 	}
 
-	public virtual void useAbility(Transform spawnPoint, Vector3 aimPoint, bool moving)
+	public virtual void useAbility(Transform spawnPoint, Vector3 aimPoint)
 	{
 
 	}

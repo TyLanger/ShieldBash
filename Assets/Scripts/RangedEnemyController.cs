@@ -20,7 +20,7 @@ public class RangedEnemyController : EnemyController {
 		// transform.forward returns something like (1.0, 0.0, 0.0)
 		// Need to multiply by how far you want the projectile to go
 		// then add it to the current location. Otherwise it will try to go to (1.0, 0.0, 0.0 world coords.
-		projectile.useAbility (transform, transform.position + (transform.forward * GetComponent<EnemyAI> ().attackDist), true);
+		projectile.useAbility (transform, transform.position + (transform.forward * GetComponent<EnemyAI> ().attackDist));
 		Invoke ("disableAttackArc", 0.1f);
 	}
 

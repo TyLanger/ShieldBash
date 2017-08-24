@@ -61,7 +61,7 @@ public class PlayerController : MonoBehaviour {
 		if (Input.GetButtonDown ("Ability1") ) {
 			// default q
 			// set the point where it should spawn and the place it should travel to
-			projectileAbility.useAbility (transform, lookPoint, true);
+			projectileAbility.useAbility (transform, lookPoint);
 		}
 		if (Input.GetButtonDown ("Ability2")) {
 			// default e
@@ -75,7 +75,7 @@ public class PlayerController : MonoBehaviour {
 		}
 		if (Input.GetButtonDown ("Ability4")) {
 			// default f
-			bombAbility.useAbility(transform, lookPoint, false);
+			bombAbility.useAbility(transform, lookPoint);
 		}
 	}
 	

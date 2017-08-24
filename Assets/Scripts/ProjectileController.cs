@@ -4,13 +4,13 @@ using UnityEngine;
 
 public class ProjectileController : MonoBehaviour {
 
-	float moveSpeed = 1f;
-	float maxDistance = 20f;
-	float apexHeight = 2;
-	float timeAlive = 2f;
+	public float moveSpeed = 1f;
+	public float maxDistance = 20f;
+	protected float apexHeight = 2;
+	public float timeAlive = 2f;
 
-	Vector3 spawnPoint;
-	Vector3 movePosition;
+	protected Vector3 spawnPoint;
+	protected Vector3 movePosition;
 	bool moving = false;
 
 	int damage = 65;
