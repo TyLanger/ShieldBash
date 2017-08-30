@@ -10,6 +10,7 @@ public class Bomb : ProjectileController {
 	// Use this for initialization
 	void Start () {
 		//explosion = GetComponentInChildren<SphereCollider> ().gameObject;
+
 	}
 
 	void FixedUpdate() {
@@ -22,7 +23,7 @@ public class Bomb : ProjectileController {
 	void Update () {
 		if(fuseTime < 0)
 		{
-			Debug.Log ("Timed explosion");
+			//Debug.Log ("Timed explosion");
 			Detonate ();
 		}
 		fuseTime -= Time.deltaTime;
@@ -31,6 +32,7 @@ public class Bomb : ProjectileController {
 	void Detonate()
 	{
 		explosion.useAbility ();
+		explosion.setSelf (caster);
 		Invoke ("DestroySelf", 0.2f);
 	}
 

@@ -20,7 +20,6 @@ public class PlayerController : MonoBehaviour {
 	int shieldDamage = 50;
 
 	Animator shieldAnim;
-	public Animation shieldSmashAnim;
 
 	Health myHealth;
 	int maxHealth = 100;
@@ -30,9 +29,11 @@ public class PlayerController : MonoBehaviour {
 	float dashDistance = 10;
 	Vector3 dashStart;
 
-	public Ability testAbility;
-	public Ability projectileAbility;
-	public Ability bombAbility;
+	bool shielding = false;
+
+	public Ability eAbility;
+	public Ability qAbility;
+	public Ability fAbility;
 
 	Vector3 lookPoint;
 
@@ -57,15 +58,19 @@ public class PlayerController : MonoBehaviour {
 		}
 		if(Input.GetButtonDown("Fire2")) {
 			// right click
+			shielding = true;
+		}
+		if (Input.GetButtonUp ("Fire2")) {
+			shielding = false;
 		}
 		if (Input.GetButtonDown ("Ability1") ) {
 			// default q
 			// set the point where it should spawn and the place it should travel to
-			projectileAbility.useAbility (transform, lookPoint);
+			qAbility.useAbility (transform, lookPoint);
 		}
 		if (Input.GetButtonDown ("Ability2")) {
 			// default e
-			testAbility.useAbility();
+			eAbility.useAbility();
 		}
 		if (Input.GetButtonDown ("Ability3")) {
 			// default r
@@ -75,7 +80,7 @@ public class PlayerController : MonoBehaviour {
 		}
 		if (Input.GetButtonDown ("Ability4")) {
 			// default f
-			bombAbility.useAbility(transform, lookPoint);
+			fAbility.useAbility(transform, lookPoint);
 		}
 	}
 	
@@ -84,7 +89,9 @@ public class PlayerController : MonoBehaviour {
 		if (!dashing) {
 			moveDirection = new Vector3 (Input.GetAxisRaw ("Horizontal"), 0, Input.GetAxisRaw ("Vertical"));
 		} else {
-			if (Vector3.Distance (transform.position, dashStart) > dashDistance) {
+			// if the dash button is pressed while standing still, the player can get stuck
+			// the code after the || should safeguard against that
+			if ((Vector3.Distance (transform.position, dashStart) > dashDistance) || (moveDirection.magnitude < 0.1f)) {
 				moveSpeed /= dashSpeedMultiplier;
 				dashing = false;
 			}
@@ -135,6 +142,11 @@ public class PlayerController : MonoBehaviour {
 
 		//shieldAnim.SetBool ("isSmashing", false);
 
+	}
+
+	public bool isShielding()
+	{
+		return shielding;
 	}
 
 	void dashAbility()

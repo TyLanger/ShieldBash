@@ -18,7 +18,7 @@ public class ProjectileController : MonoBehaviour {
 	public AnimationCurve curve;
 	//Animator anim;
 	public GameObject child;
-	GameObject caster;
+	protected GameObject caster;
 
 	// Use this for initialization
 	void Awake () {
@@ -61,12 +61,26 @@ public class ProjectileController : MonoBehaviour {
 		Destroy (gameObject);
 	}
 
+	void reflect(GameObject reflector)
+	{
+		caster = reflector;
+		moveSpeed *= -1;
+	}
+
 	void OnTriggerEnter(Collider col)
 	{
 		if (col.GetComponent<Health> () != null) {
 			if (col.gameObject != caster) {
 				col.GetComponent<Health> ().takeDamage (damage);
 				maxTimeReached ();
+			}
+		} else if (col.CompareTag ("Obstacle")) {
+			// don't go through walls
+			maxTimeReached ();
+		} else if (col.CompareTag ("Shield")) {
+			if(col.GetComponent<Shield>().isShielding())
+			{
+				reflect (col.gameObject.transform.parent.gameObject);
 			}
 		}
 	}

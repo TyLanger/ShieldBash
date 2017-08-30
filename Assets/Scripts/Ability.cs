@@ -7,6 +7,7 @@ public class Ability : MonoBehaviour {
 	public int damage = 0;
 	public float cooldown = 0;
 	public float timeNextReady = 0;
+	protected GameObject self;
 
 
 	public virtual void useAbility()
@@ -17,6 +18,11 @@ public class Ability : MonoBehaviour {
 	public virtual void useAbility(Transform spawnPoint, Vector3 aimPoint)
 	{
 
+	}
+
+	public void setSelf(GameObject _self)
+	{
+		self = _self;
 	}
 
 	protected bool isReady()
