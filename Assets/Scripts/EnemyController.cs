@@ -33,6 +33,10 @@ public class EnemyController : MonoBehaviour {
 	Vector3 spawnPoint;
 	float spawnRadius = 5;
 
+	bool beingPulled = false;
+	float pullSpeedMultiplier = 4;
+	Vector3 pullTargetPos;
+
 	public Transform weapon;
 	Animator weaponAnim;
 	public GameObject swordArc;
@@ -96,7 +100,19 @@ public class EnemyController : MonoBehaviour {
 				// only look at the player when moving
 				// and only when moving towards player
 				transform.LookAt (player);
-				transform.position = Vector3.MoveTowards (transform.position, player.transform.position, moveSpeed);
+				if (beingPulled) {
+					// if you are being pulled, move towards the pull location
+					// move faster than normal because of pullSpeedMultiplier
+					// This only works smoothly if the target is already moving towards you
+					// They will wait to get out of random walk before zooming towards you
+					transform.position = Vector3.MoveTowards (transform.position, pullTargetPos, moveSpeed  * pullSpeedMultiplier);
+					if (Vector3.Distance (transform.position, pullTargetPos) < 0.1f) {
+						// Once you get to the pull location, you can start moving again
+						beingPulled = false;
+					}
+				} else {
+					transform.position = Vector3.MoveTowards (transform.position, player.transform.position, moveSpeed);
+				}
 			}
 		}
 
@@ -176,6 +192,15 @@ public class EnemyController : MonoBehaviour {
 		swordArc.SetActive(false);
 		// attack is finished, stop attacking so you can move again or queue up another attack
 
+	}
+
+	public void setPullLocation(Vector3 targetPos)
+	{
+		// set a target to move towards
+		pullTargetPos = targetPos;
+		// set being Pulled to true
+		// this changes the movement from following the player to moving towards this point
+		beingPulled = true;
 	}
 
 	void OnDrawGizmos()

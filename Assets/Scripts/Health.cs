@@ -4,11 +4,13 @@ using UnityEngine;
 
 public class Health : MonoBehaviour {
 
+
 	int maxHealth = 100;
 	public int currentHealth;
 
-	public delegate void deathDelegate();
-	public deathDelegate onDeath;
+	public delegate void voidDelegate();
+	public voidDelegate onDeath;
+	public voidDelegate onDamage;
 
 	public RectTransform healthBar;
 	float healthBarWidth;
@@ -28,6 +30,9 @@ public class Health : MonoBehaviour {
 
 	public void takeDamage(int damage)
 	{
+		if (onDamage != null) {
+			onDamage ();
+		}
 		var textMesh = Instantiate(damageText, transform.position, cameraTrans.rotation);
 		textMesh.transform.parent = null;
 		textMesh.text = "-" + damage.ToString ();

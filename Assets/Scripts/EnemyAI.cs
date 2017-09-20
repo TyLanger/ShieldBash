@@ -28,18 +28,24 @@ public class EnemyAI : MonoBehaviour {
 		enemyController = GetComponent<EnemyController> ();
 		//Invoke ("EnemyDecision", 2);
 		enemyController.onDeath += reset;
+		GetComponent<Health> ().onDamage += tookDamage;
 	}
 	
 	// Update is called once per frame
 	void Update () {
 		if (Time.time > timeOfNextDecision) {
-			timeOfNextDecision = Time.time +timeBetweenDecisions;
-			enemyAction ();
-			debugText.text = enemyAction.Method.ToString();
-			debugText.gameObject.SetActive (false);
+			makeDecision ();
 
 		}
 
+	}
+
+	void makeDecision()
+	{
+		timeOfNextDecision = Time.time +timeBetweenDecisions;
+		enemyAction ();
+		debugText.text = enemyAction.Method.ToString();
+		debugText.gameObject.SetActive (false);
 	}
 
 	void RandomWalk() {
@@ -75,6 +81,20 @@ public class EnemyAI : MonoBehaviour {
 			enemyAction = RandomWalk;
 		}
 
+	}
+
+	void tookDamage()
+	{
+		// if the enemy is randomly walking then takes damage from the player,
+		// move towards the player
+		// this is the same as when the player comes into aggro range
+		// potentially should make aggro range larger
+		// or have a different aggro system so when the player pulls aggro, the enemy does something. Then make this method flag the aggro
+		if (enemyAction == RandomWalk) {
+			enemyAction = MoveTowardsPlayer;
+			// also call enemyAction immediately so there is no delay
+			makeDecision();
+		}
 	}
 
 	void reset()

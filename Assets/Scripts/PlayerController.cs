@@ -44,6 +44,7 @@ public class PlayerController : MonoBehaviour {
 		myHealth = GetComponent<Health> ();
 		// when the health component decides the player dies, get it to call die in this script
 		myHealth.onDeath += die;
+		//myHealth.onDamage += tookDamage;
 		myHealth.setMaxHealth (maxHealth);
 	}
 
@@ -158,12 +159,21 @@ public class PlayerController : MonoBehaviour {
 
 		// dash in direction of mouse
 		// moveDirection = new Vector3(
+		Debug.Log(lookPoint - transform.position );
+		moveDirection = lookPoint - transform.position;
 	}
 
 	public void die()
 	{
 		transform.position = spawnPoint;
 		myHealth.resetHealth ();
+	}
+
+	void tookDamage()
+	{
+		// created now to suppress errors with health calling onDamage()
+		// damage sound effect
+		// blood splash or something
 	}
 
 }
