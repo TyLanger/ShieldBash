@@ -42,6 +42,9 @@ public class EnemyController : MonoBehaviour {
 	public GameObject swordArc;
 
 	Health health;
+	// for stunning, rooting, etc
+	bool canAttack = true;
+	bool canMove = true;
 
 	// Use this for initialization
 	protected virtual void Start () {
@@ -78,40 +81,43 @@ public class EnemyController : MonoBehaviour {
 		} else if(attacking) {
 			
 		} else {
-			
-			// default to random walk when the player isn't nearby. This is governed by the EnemyAI
-			if (randomWalk) {
-				transform.LookAt (randomPoint);
-				if (Time.time > timeOfNextRandomWalk) {
-					// every timeBetweenRandomWalks (default 2 seconds) find a random point near the spawn point.
-					// move towards that point
-					timeOfNextRandomWalk = Time.time + timeBetweenRandomWalks;
-					// pick a random angle
-					randomAngle = Random.Range (0, 2 * Mathf.PI);
-					// turn that random angle into a position on the unit circle
-					// multiply by a radius to get a point inside the circle of the spawn point.
-					// the spawn circle is a circle of radius spawnRadius around the spawn point
-					randomPoint = spawnPoint + new Vector3 (Mathf.Cos (randomAngle), 0, Mathf.Sin (randomAngle)) * Random.Range (0, spawnRadius);
-				}
-				
-				Debug.DrawLine (transform.position, randomPoint);
-				transform.position = Vector3.MoveTowards (transform.position, randomPoint, moveSpeed);
-			} else {
-				// only look at the player when moving
-				// and only when moving towards player
-				transform.LookAt (player);
-				if (beingPulled) {
-					// if you are being pulled, move towards the pull location
-					// move faster than normal because of pullSpeedMultiplier
-					// This only works smoothly if the target is already moving towards you
-					// They will wait to get out of random walk before zooming towards you
-					transform.position = Vector3.MoveTowards (transform.position, pullTargetPos, moveSpeed  * pullSpeedMultiplier);
-					if (Vector3.Distance (transform.position, pullTargetPos) < 0.1f) {
-						// Once you get to the pull location, you can start moving again
-						beingPulled = false;
+			// stop moving if can't move
+			// can't move is set when the entity is stunned or rooted, etc.
+			if (canMove || beingPulled) {
+				// default to random walk when the player isn't nearby. This is governed by the EnemyAI
+				if (randomWalk) {
+					transform.LookAt (randomPoint);
+					if (Time.time > timeOfNextRandomWalk) {
+						// every timeBetweenRandomWalks (default 2 seconds) find a random point near the spawn point.
+						// move towards that point
+						timeOfNextRandomWalk = Time.time + timeBetweenRandomWalks;
+						// pick a random angle
+						randomAngle = Random.Range (0, 2 * Mathf.PI);
+						// turn that random angle into a position on the unit circle
+						// multiply by a radius to get a point inside the circle of the spawn point.
+						// the spawn circle is a circle of radius spawnRadius around the spawn point
+						randomPoint = spawnPoint + new Vector3 (Mathf.Cos (randomAngle), 0, Mathf.Sin (randomAngle)) * Random.Range (0, spawnRadius);
 					}
+				
+					Debug.DrawLine (transform.position, randomPoint);
+					transform.position = Vector3.MoveTowards (transform.position, randomPoint, moveSpeed);
 				} else {
-					transform.position = Vector3.MoveTowards (transform.position, player.transform.position, moveSpeed);
+					// only look at the player when moving
+					// and only when moving towards player
+					transform.LookAt (player);
+					if (beingPulled) {
+						// if you are being pulled, move towards the pull location
+						// move faster than normal because of pullSpeedMultiplier
+						// This only works smoothly if the target is already moving towards you
+						// They will wait to get out of random walk before zooming towards you
+						transform.position = Vector3.MoveTowards (transform.position, pullTargetPos, moveSpeed * pullSpeedMultiplier);
+						if (Vector3.Distance (transform.position, pullTargetPos) < 0.1f) {
+							// Once you get to the pull location, you can start moving again
+							beingPulled = false;
+						}
+					} else {
+						transform.position = Vector3.MoveTowards (transform.position, player.transform.position, moveSpeed);
+					}
 				}
 			}
 		}
@@ -137,14 +143,14 @@ public class EnemyController : MonoBehaviour {
 		randomWalk = true;
 	}
 
-	bool canAttack()
+	bool attackCooldownOver()
 	{
 		return Time.time > timeOfNextAttack;
 	}
 
 	public void attackPlayer()
 	{
-		if (canAttack()) {
+		if (attackCooldownOver()) {
 			timeOfNextAttack = Time.time + timeBetweenAttacks;
 			// attacking = true;
 			rootedForAttack = true;
@@ -201,6 +207,19 @@ public class EnemyController : MonoBehaviour {
 		// set being Pulled to true
 		// this changes the movement from following the player to moving towards this point
 		beingPulled = true;
+	}
+
+	public void stun(float durationOfStun)
+	{
+		canMove = false;
+		canAttack = false;
+		Invoke ("unStun", durationOfStun);
+	}
+
+	void unStun()
+	{
+		canMove = true;
+		canAttack = true;
 	}
 
 	void OnDrawGizmos()

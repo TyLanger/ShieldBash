@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class AoePullAbility : AoeDamageAbility {
 
-	float pullDistance = 2;
+	//float pullDistance = 2;
 
 	public override void OnTriggerEnter(Collider col)
 	{
@@ -13,7 +13,7 @@ public class AoePullAbility : AoeDamageAbility {
 				// pull the enemy to pullDistance away from you instantly
 				//col.transform.position = transform.position + (col.transform.position - transform.position).normalized * pullDistance;
 				col.GetComponent<Health> ().takeDamage (damage);
-				col.GetComponent<EnemyController> ().setPullLocation (transform.position + (col.transform.position - transform.position).normalized * pullDistance);
+				//col.GetComponent<EnemyController> ().setPullLocation (transform.position + (col.transform.position - transform.position).normalized * pullDistance);
 			}
 		}
 	}

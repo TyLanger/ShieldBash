@@ -11,7 +11,9 @@ public class EnemyAI : MonoBehaviour {
 	public TextMesh debugText;
 
 	float timeBetweenDecisions = 0.15f;
+	float timeBetweenCombatDecisions = 0.05f;
 	float timeOfNextDecision = 0;
+	bool inCombat = false;
 
 	EnemyController enemyController;
 
@@ -42,7 +44,7 @@ public class EnemyAI : MonoBehaviour {
 
 	void makeDecision()
 	{
-		timeOfNextDecision = Time.time +timeBetweenDecisions;
+		timeOfNextDecision = Time.time + (inCombat?timeBetweenCombatDecisions : timeBetweenDecisions);
 		enemyAction ();
 		debugText.text = enemyAction.Method.ToString();
 		debugText.gameObject.SetActive (false);
