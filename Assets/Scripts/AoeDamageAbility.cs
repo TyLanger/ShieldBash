@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class AoeDamageAbility : Ability {
 
-
+	public float aoeSize = 10;
 
 	void Start() {
 		// useAbility happens first then start
@@ -20,8 +20,11 @@ public class AoeDamageAbility : Ability {
 
 	void setColliderSize()
 	{
+		transform.localScale = Vector3.one * aoeSize;
+
 		// this can probably all be done in start
 		// only reason it's here is so I can change the statusEffect in game
+		/*
 		switch (additionalEffect) {
 		case StatusEffect.Push:
 			transform.localScale = Vector3.one * pushScale;
@@ -29,7 +32,8 @@ public class AoeDamageAbility : Ability {
 		case StatusEffect.Pull:
 			transform.localScale = Vector3.one * pullScale;
 			break;
-		}
+		}*/
+
 	}
 
 	public override void useAbility()

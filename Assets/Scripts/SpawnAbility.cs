@@ -14,8 +14,10 @@ public class SpawnAbility : Ability {
 			base.useAbility ();
 
 			var projectileCopy = Instantiate (projectile.gameObject, spawnPoint.position, spawnPoint.rotation);
-			projectileCopy.GetComponent<ProjectileController> ().setDamage (damage);
-			projectileCopy.GetComponent<ProjectileController> ().moveTo (aimPoint, spawnPoint.gameObject);
+			var projectileController = projectileCopy.GetComponent<ProjectileController> ();
+			projectileController.setDamage (damage);
+			projectileController.moveTo (aimPoint, spawnPoint.gameObject);
+			projectileController.setAbility (this);
 		}
 	}
 }

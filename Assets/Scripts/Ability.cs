@@ -7,13 +7,28 @@ public class Ability : MonoBehaviour {
 	// additional effects that can be applied to the ability in addition to damage
 	public enum StatusEffect{None, Push, Pull, Knockdown, Knockup, Stun, Slow, DamageOverTime};
 
+
+	// HideInInspector so they don't get drawn twice
+	// The inspector gets drawn as normal (without these)
+	// then these get drawn based on what additionalEffects is set to
+	[HideInInspector]
 	public StatusEffect additionalEffect;
 
+	[HideInInspector]
 	public float pushDistance = 8;
-	public float pushScale = 7;
+	//[HideInInspector]
+	//public float pushScale = 7;
+	[HideInInspector]
 	public float pullDistance = 2;
-	public float pullScale = 15;
+	//[HideInInspector]
+	//public float pullScale = 15;
+	[HideInInspector]
 	public float stunDuration = 2;
+
+	[HideInInspector]
+	public int dotDamageTick;
+	[HideInInspector]
+	public float dotDamageInterval, dotTotalTime;
 
 	public int damage = 0;
 	public float cooldown = 0;
@@ -43,6 +58,9 @@ public class Ability : MonoBehaviour {
 			break;
 		case StatusEffect.Stun:
 			g.GetComponent<EnemyController> ().stun (stunDuration);
+			break;
+		case StatusEffect.DamageOverTime:
+			g.GetComponent<Health> ().takeDamageOverTime(dotDamageTick, dotDamageInterval, dotTotalTime);
 			break;
 		}
 	}

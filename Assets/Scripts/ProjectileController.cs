@@ -19,6 +19,7 @@ public class ProjectileController : MonoBehaviour {
 	//Animator anim;
 	public GameObject child;
 	protected GameObject caster;
+	Ability parentAbility;
 
 	// Use this for initialization
 	void Awake () {
@@ -72,6 +73,7 @@ public class ProjectileController : MonoBehaviour {
 		if (col.GetComponent<Health> () != null) {
 			if (col.gameObject != caster) {
 				col.GetComponent<Health> ().takeDamage (damage);
+				parentAbility.additionalEffects (col.gameObject);
 				maxTimeReached ();
 			}
 		} else if (col.CompareTag ("Obstacle")) {
@@ -88,6 +90,13 @@ public class ProjectileController : MonoBehaviour {
 	public void setDamage(int d)
 	{
 		damage = d;
+	}
+
+	public void setAbility(Ability a)
+	{
+		// set the ability that fired this projectile
+		// it has the code to do the additional effects (stun, slow, etc.)
+		parentAbility = a;
 	}
 
 	void OnDrawGizmos()
