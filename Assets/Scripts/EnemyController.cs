@@ -1,14 +1,30 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public class EnemyController : MonoBehaviour {
+
+	[System.Serializable]
+	public struct Slow {
+		public float percent;
+		public float endTime;
+
+		public Slow(float p, float duration)
+		{
+			percent = p;
+			endTime = Time.time + duration;
+		}
+
+	};
+
 
 	public delegate void deathDelegate();
 	public deathDelegate onDeath;
 
 	Transform player;
 	public float moveSpeed = 0.5f;
+	float originalMoveSpeed;
 
 
 	public bool attacking = false;
@@ -46,6 +62,8 @@ public class EnemyController : MonoBehaviour {
 	bool canAttack = true;
 	bool canMove = true;
 
+	public List<Slow> slowList;
+
 	// Use this for initialization
 	protected virtual void Start () {
 		player = FindObjectOfType<PlayerController> ().transform;
@@ -53,12 +71,40 @@ public class EnemyController : MonoBehaviour {
 		weaponAnim = weapon.GetComponent<Animator> ();
 		health = GetComponent<Health> ();
 		health.onDeath += die;
+		originalMoveSpeed = moveSpeed;
+
 	}
 	
 	// Update is called once per frame
 	void FixedUpdate () {
 
+		// if there is a slow in the list, do slow logic
+		if (slowList.Count > 0) {
 
+			do{
+				if(slowList[0].endTime < Time.time)
+				{
+					// first slow had no time left
+					slowList.RemoveAt(0);
+				}
+				else
+				{
+					// found a slow that has time left
+					// adjust the moveSpeed based on the original move speed
+					// this code is run every frame so moveSpeed *= slow makes the move speed slow down more and more every frame
+					moveSpeed = originalMoveSpeed * ((100 - slowList[0].percent) / 100f);
+					break;
+				}
+				// a slow may have been removed. Check again if there are slows in the list
+			} while(slowList.Count > 0);
+
+			// do-while either exitted with no slows left or with the break
+			// check if there are no slows
+			if (slowList.Count == 0) {
+				// no slows left, reset move speed
+				moveSpeed = originalMoveSpeed;
+			}
+		}
 
 		if (rootedForAttack) {
 			transform.LookAt (player);
@@ -126,10 +172,13 @@ public class EnemyController : MonoBehaviour {
 
 	public void die()
 	{
+		// reset the enemy so it can be used again when it dies
 		transform.position = spawnPoint;
 		attacking = false;
 		rootedForAttack = false;
 		health.resetHealth ();
+		unStun ();
+		endSlow ();
 		onDeath ();
 	}
 
@@ -152,27 +201,22 @@ public class EnemyController : MonoBehaviour {
 	{
 		if (attackCooldownOver()) {
 			timeOfNextAttack = Time.time + timeBetweenAttacks;
-			// attacking = true;
-			rootedForAttack = true;
-			// set attacking to true so the enemy stops to try to attack the player
-			// attacking gets set to false when the player moves out of the attack range
-			// then the enemy can move again
-			//timeOfAttackStart = Time.time;
 
-			Invoke ("startAttack", attackWindUpTime);
+			// the enemy stops moving to start its attack
+			// it can still track the player during this time
+			rootedForAttack = true;
+
 			// stop moving to cast attack for attackWindUpTime seconds
-			// Start animation
-			// swordAnim.SetTrigger ("SwordTrigger");
-			// Invoke damage trigger
-			// Invoke("activateAttackArc", damageDelayTime);
+			Invoke ("startAttack", attackWindUpTime);
+
 		}
 	}
 
 	void startAttack()
 	{
-		
-		// stop moving to cast attack for attackWindUpTime seconds
 		// Start animation
+		// the enemy is still rooted, but now it can't track the player
+		// wherever it was last looking is where it aims now
 		attacking = true;
 		rootedForAttack = false;
 		weaponAnim.SetTrigger ("SwordTrigger");
@@ -209,8 +253,31 @@ public class EnemyController : MonoBehaviour {
 		beingPulled = true;
 	}
 
+	public void slow(float slowPercent, float slowDuration)
+	{
+		// this system only works for 1 slow at a time right now
+		// only works CORRECTLY for 1 slow
+		// multiple slows will stack, but only get the duration of the first slow
+		//moveSpeed *= ((100 - slowPercent) / 100f);
+		//Invoke ("endSlow", slowDuration);
+
+		// add this slow to the list of slows
+		slowList.Add(new Slow(slowPercent, slowDuration));
+		// sort the slowList
+		// y.CompareTo(x) because want bigger numbers at the start of the list
+		slowList.Sort((x, y) => y.percent.CompareTo(x.percent));
+	}
+
+	void endSlow()
+	{
+		// this will break any subsequent slows applied
+		moveSpeed = originalMoveSpeed;
+	}
+
 	public void stun(float durationOfStun)
 	{
+		// same as slows
+		// only works for 1 stun at a time
 		canMove = false;
 		canAttack = false;
 		Invoke ("unStun", durationOfStun);

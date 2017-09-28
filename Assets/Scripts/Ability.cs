@@ -25,10 +25,17 @@ public class Ability : MonoBehaviour {
 	[HideInInspector]
 	public float stunDuration = 2;
 
+	// DoT
 	[HideInInspector]
 	public int dotDamageTick;
 	[HideInInspector]
-	public float dotDamageInterval, dotTotalTime;
+	public float dotTimeInterval, dotTotalTime;
+
+	// Slow
+	[HideInInspector]
+	public float slowPercent, slowDuration;
+	[HideInInspector]
+	public bool decayingSlow;
 
 	public int damage = 0;
 	public float cooldown = 0;
@@ -60,7 +67,11 @@ public class Ability : MonoBehaviour {
 			g.GetComponent<EnemyController> ().stun (stunDuration);
 			break;
 		case StatusEffect.DamageOverTime:
-			g.GetComponent<Health> ().takeDamageOverTime(dotDamageTick, dotDamageInterval, dotTotalTime);
+			g.GetComponent<Health> ().takeDamageOverTime(dotDamageTick, dotTimeInterval, dotTotalTime);
+			break;
+
+		case StatusEffect.Slow:
+			g.GetComponent<EnemyController> ().slow (slowPercent, slowDuration);
 			break;
 		}
 	}

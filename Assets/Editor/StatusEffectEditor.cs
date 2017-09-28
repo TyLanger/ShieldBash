@@ -16,17 +16,28 @@ public class StatusEffectEditor : Editor {
 	stunDurationProp,
 	dotDamageTickProp,
 	dotTimeIntervalProp,
-	dotTotalTimeProp;
+	dotTotalTimeProp,
+	slowPercentProp,
+	slowDurationProp,
+	decayingSlowProp;
 
 	void OnEnable()
 	{
 		additionalEffectProp = serializedObject.FindProperty ("additionalEffect");
+		//push
 		pushDistanceProp = serializedObject.FindProperty ("pushDistance");
-		//pushScaleProp = serializedObject.FindProperty ("pushScale");
+		//pull
 		pullDistanceProp = serializedObject.FindProperty ("pullDistance");
-		//pullScaleProp = serializedObject.FindProperty ("pullScale");
+		//stun
 		stunDurationProp = serializedObject.FindProperty ("stunDuration");
-		//dotDamageTickProp
+		//dot
+		dotDamageTickProp = serializedObject.FindProperty ("dotDamageTick");
+		dotTimeIntervalProp = serializedObject.FindProperty ("dotTimeInterval");
+		dotTotalTimeProp = serializedObject.FindProperty ("dotTotalTime");
+		//slow
+		slowPercentProp = serializedObject.FindProperty ("slowPercent");
+		slowDurationProp = serializedObject.FindProperty ("slowDuration");
+		decayingSlowProp = serializedObject.FindProperty ("decayingSlow");
 
 	}
 
@@ -49,25 +60,49 @@ public class StatusEffectEditor : Editor {
 		switch (se) {
 		case Ability.StatusEffect.Pull:
 			EditorGUILayout.DelayedFloatField (pullDistanceProp, new GUIContent ("pullDistance"));
-			//EditorGUILayout.DelayedFloatField (pullScaleProp, new GUIContent ("pullScale"));
 			break;
 
 		case Ability.StatusEffect.Push:
 			EditorGUILayout.DelayedFloatField (pushDistanceProp, new GUIContent ("pushDistance"));
-			//EditorGUILayout.DelayedFloatField (pushScaleProp, new GUIContent ("pushScale"));
 			break;
 
 		case Ability.StatusEffect.Stun:
+			// with this style, when the value field is changed, it stays
 			EditorGUILayout.DelayedFloatField (stunDurationProp, new GUIContent ("stunDuration"));
 			break;
+
 		case Ability.StatusEffect.DamageOverTime:
-			ability.dotDamageTick = EditorGUILayout.IntField ("Damage per tick", ability.dotDamageTick);
-			ability.dotDamageInterval = EditorGUILayout.FloatField ("Time between ticks", ability.dotDamageInterval);
-			ability.dotTotalTime = EditorGUILayout.FloatField ("Total dot time", ability.dotTotalTime);
+			// with this style, when the value field is changed it does NOT stay.
+			// You have to click apply for it to save when you run
+			//ability.dotDamageTick = EditorGUILayout.IntField ("Damage per tick", ability.dotDamageTick);
+			EditorGUILayout.DelayedIntField (dotDamageTickProp, new GUIContent ("Damage per tick"));
+			//ability.dotTimeInterval = EditorGUILayout.FloatField ("Time between ticks", ability.dotTimeInterval);
+			EditorGUILayout.DelayedFloatField (dotTimeIntervalProp, new GUIContent ("Time between ticks"));
+			//ability.dotTotalTime = EditorGUILayout.FloatField ("Total dot time", ability.dotTotalTime);
+			EditorGUILayout.DelayedFloatField (dotTotalTimeProp, new GUIContent ("Total dot time"));
+			break;
+
+		case Ability.StatusEffect.Slow:
+			//ability.slowPercent = EditorGUILayout.Slider ("Slow percent", ability.slowPercent, 0f, 100f);
+			EditorGUILayout.Slider (slowPercentProp, 0f, 100f, new GUIContent ("Slow percent"));
+			//ability.slowDuration = EditorGUILayout.FloatField ("Slow duration", ability.slowDuration);
+			EditorGUILayout.DelayedFloatField (slowDurationProp, new GUIContent ("Slow duration"));
+			ability.decayingSlow = EditorGUILayout.Toggle ("Decaying slow", ability.decayingSlow);
+			// I don't know how to make it work with toggles
+			// where you don't have to click apply
+			// not valid
+			//EditorGUILayout.Toggle (decayingSlowProp, new GUIContent ("Decaying slow"));
+			// same problem
+			//ability.decayingSlow = EditorGUILayout.Toggle(new GUIContent("Decaying slow"), ability.decayingSlow);
 			break;
 		}
 
+		// with this style, when the value field is changed, it stays
+		// EditorGUILayout.DelayedFloatField (stunDurationProp, new GUIContent ("stunDuration"));
 
+		// with this style, when the value field is changed it does NOT stay.
+		// You have to click apply for it to save when you run
+		//ability.dotDamageTick = EditorGUILayout.IntField ("Damage per tick", ability.dotDamageTick);
 
 		serializedObject.ApplyModifiedProperties ();
 	}
