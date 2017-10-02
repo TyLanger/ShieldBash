@@ -58,20 +58,20 @@ public class Ability : MonoBehaviour {
 		switch(additionalEffect)
 		{
 		case StatusEffect.Push:
-			g.GetComponent<EnemyController> ().setPullLocation (transform.position + (g.transform.position - transform.position).normalized * pushDistance);
+			g.GetComponent<MovementController> ().setDisplacementLocation (transform.position + (g.transform.position - transform.position).normalized * pushDistance);
 			break;
 		case StatusEffect.Pull:
-			g.GetComponent<EnemyController> ().setPullLocation (transform.position + (g.transform.position - transform.position).normalized * pullDistance);
+			g.GetComponent<MovementController> ().setDisplacementLocation (transform.position + (g.transform.position - transform.position).normalized * pullDistance);
 			break;
 		case StatusEffect.Stun:
-			g.GetComponent<EnemyController> ().stun (stunDuration);
+			g.GetComponent<MovementController> ().stun (stunDuration);
 			break;
 		case StatusEffect.DamageOverTime:
 			g.GetComponent<Health> ().takeDamageOverTime(dotDamageTick, dotTimeInterval, dotTotalTime);
 			break;
 
 		case StatusEffect.Slow:
-			g.GetComponent<EnemyController> ().slow (slowPercent, slowDuration);
+			g.GetComponent<MovementController> ().slow (slowPercent, slowDuration);
 			break;
 		}
 	}

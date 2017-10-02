@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour {
+public class PlayerController : MovementController {
 
-
+	/* in parent
 	public float moveSpeed = 0.5f;
 	Vector3 moveDirection;
+	*/
 	Vector3 spawnPoint;
 
 	public float timeBetweenAttacks = 0.25f;
@@ -38,7 +39,8 @@ public class PlayerController : MonoBehaviour {
 	Vector3 lookPoint;
 
 	// Use this for initialization
-	void Start () {
+	protected override void Start () {
+		base.Start ();
 		shieldAnim = shield.GetComponent<Animator> ();
 		spawnPoint = transform.position;
 		myHealth = GetComponent<Health> ();
@@ -86,18 +88,9 @@ public class PlayerController : MonoBehaviour {
 	}
 	
 	// Update is called once per frame
-	void FixedUpdate () {
-		if (!dashing) {
-			moveDirection = new Vector3 (Input.GetAxisRaw ("Horizontal"), 0, Input.GetAxisRaw ("Vertical"));
-		} else {
-			// if the dash button is pressed while standing still, the player can get stuck
-			// the code after the || should safeguard against that
-			if ((Vector3.Distance (transform.position, dashStart) > dashDistance) || (moveDirection.magnitude < 0.1f)) {
-				moveSpeed /= dashSpeedMultiplier;
-				dashing = false;
-			}
-		}
-		transform.position = Vector3.MoveTowards(transform.position, transform.position + moveDirection, moveSpeed);
+	protected override void FixedUpdate () {
+		
+		base.FixedUpdate ();
 
 		Ray cameraRay = Camera.main.ScreenPointToRay (Input.mousePosition);
 		Plane eyePlane = new Plane(Vector3.up, new Vector3(0, 0, 0));
@@ -110,6 +103,31 @@ public class PlayerController : MonoBehaviour {
 		}
 
 
+	}
+
+	public override Vector3 getPlayerTargetMoveLocation()
+	{
+		return transform.position + new Vector3 (Input.GetAxisRaw ("Horizontal"), 0, Input.GetAxisRaw ("Vertical"));
+		/* dashing doesn't work at the moment
+		if (!dashing) {
+			return new Vector3 (Input.GetAxisRaw ("Horizontal"), 0, Input.GetAxisRaw ("Vertical"));
+		} else {
+			// if the dash button is pressed while standing still, the player can get stuck
+			// the code after the || should safeguard against that
+			// Dash should be redone with the new MovementController
+			// moveDirection used to be based on input
+			if ((Vector3.Distance (transform.position, dashStart) > dashDistance) || (moveDirection.magnitude < 0.1f)) {
+				moveSpeed /= dashSpeedMultiplier;
+				dashing = false;
+			}
+
+
+		}*/
+	}
+
+	public override bool isPlayer()
+	{
+		return true;
 	}
 
 	void shieldBash()
@@ -154,13 +172,13 @@ public class PlayerController : MonoBehaviour {
 	{
 		//Debug.Log ("Dashing");
 		dashing = true;
-		moveSpeed *= dashSpeedMultiplier;
+		//moveSpeed *= dashSpeedMultiplier;
 		dashStart = transform.position;
 
 		// dash in direction of mouse
 		// moveDirection = new Vector3(
 		Debug.Log(lookPoint - transform.position );
-		moveDirection = lookPoint - transform.position;
+		//moveDirection = lookPoint - transform.position;
 	}
 
 	public void die()
