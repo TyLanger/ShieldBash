@@ -25,15 +25,18 @@ public class PlayerController : MovementController {
 	Health myHealth;
 	int maxHealth = 100;
 
+	/*
 	bool dashing = false;
 	float dashSpeedMultiplier = 2;
 	float dashDistance = 10;
 	Vector3 dashStart;
+	*/
 
 	bool shielding = false;
 
-	public Ability eAbility;
 	public Ability qAbility;
+	public Ability eAbility;
+	public Ability rAbility;
 	public Ability fAbility;
 
 	Vector3 lookPoint;
@@ -73,13 +76,11 @@ public class PlayerController : MovementController {
 		}
 		if (Input.GetButtonDown ("Ability2")) {
 			// default e
-			eAbility.useAbility();
+			eAbility.useAbility(transform, lookPoint);
 		}
 		if (Input.GetButtonDown ("Ability3")) {
 			// default r
-			if (!dashing) {
-				dashAbility ();
-			}
+			rAbility.useAbility(transform, lookPoint);
 		}
 		if (Input.GetButtonDown ("Ability4")) {
 			// default f
@@ -168,6 +169,7 @@ public class PlayerController : MovementController {
 		return shielding;
 	}
 
+	/*
 	void dashAbility()
 	{
 		//Debug.Log ("Dashing");
@@ -179,7 +181,7 @@ public class PlayerController : MovementController {
 		// moveDirection = new Vector3(
 		Debug.Log(lookPoint - transform.position );
 		//moveDirection = lookPoint - transform.position;
-	}
+	}*/
 
 	public void die()
 	{

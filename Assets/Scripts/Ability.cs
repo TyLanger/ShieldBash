@@ -7,6 +7,10 @@ public class Ability : MonoBehaviour {
 	// additional effects that can be applied to the ability in addition to damage
 	public enum StatusEffect{None, Push, Pull, Knockdown, Knockup, Stun, Slow, DamageOverTime};
 
+	// might need this
+	// was going to use it to determine what parameters to pass from the player to the ability
+	// when calling useAbility() or useAbility(transform, aimPoint)
+	//public enum AbilityType{SpawnNew, UseExisting, Buff, Movement};
 
 	// HideInInspector so they don't get drawn twice
 	// The inspector gets drawn as normal (without these)
@@ -41,6 +45,7 @@ public class Ability : MonoBehaviour {
 	public float cooldown = 0;
 	float timeNextReady = 0;
 	protected GameObject self;
+	//public AbilityType abilityType;
 
 
 	public virtual void useAbility()
@@ -50,7 +55,9 @@ public class Ability : MonoBehaviour {
 
 	public virtual void useAbility(Transform spawnPoint, Vector3 aimPoint)
 	{
-
+		// default case is to ignore the variables and juse use the ability without them
+		// if the ability wants to use the variables, it will extend this
+		useAbility ();
 	}
 
 	public void additionalEffects(GameObject g)

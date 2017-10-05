@@ -4,23 +4,27 @@ using UnityEngine;
 
 public class MovementAbility : Ability {
 
-	// Use this for initialization
-	void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
+	public bool alwaysMoveToMax = true;
+	public float maxMoveDistance = 3;
+	public AoeDamageAbility aoeAbility;
 
-	public void dashToPoint(Vector3 point)
+
+	public override void useAbility (Transform spawnPoint, Vector3 aimPoint)
 	{
+		if (self == null) {
+			setSelf (transform.parent.gameObject);
+		}
+		// check if cooldown is up
+		if (isReady ()) {
+			// sets the cooldown
+			base.useAbility ();
+			if (alwaysMoveToMax) {
+				Vector3 lineToAimPoint = (aimPoint - spawnPoint.position).normalized;
+				Vector3 clampedAimPoint = spawnPoint.position + lineToAimPoint * maxMoveDistance;
+				self.GetComponent<MovementController> ().setDisplacementLocation (clampedAimPoint);
+			}
 
-	}
-
-	public override void useAbility ()
-	{
-		
+			aoeAbility.useAbility (spawnPoint, aimPoint);
+		}
 	}
 }

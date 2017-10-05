@@ -137,7 +137,7 @@ public class MovementController : MonoBehaviour {
 
 		// if you are stunned or rooted, don't move
 		// but if you are being displaced, move anyway
-		if (!isStunned || !isRooted && !(currentMovementType == MovementType.BeingDisplaced)) {
+		if (!isStunned && !isRooted || (currentMovementType == MovementType.BeingDisplaced)) {
 			// multiply by deltaTime to get consistent movement
 			// otherwise could get jumpy on frame skips
 			// more of a problem in Update. FixedUpdate should be fine. 

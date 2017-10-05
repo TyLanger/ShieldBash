@@ -5,6 +5,7 @@ using UnityEngine;
 public class AoeDamageAbility : Ability {
 
 	public float aoeSize = 10;
+	public float explosionTime = 0.2f;
 
 	void Start() {
 		// useAbility happens first then start
@@ -45,7 +46,7 @@ public class AoeDamageAbility : Ability {
 			if (!GetComponent<SphereCollider>().gameObject.activeSelf) {
 				// only activate if it's not already active. Else it can deal damage as fast as you press the button.
 				GetComponent<SphereCollider> ().gameObject.SetActive (true);
-				Invoke ("disableExplosion", 0.2f);
+				Invoke ("disableExplosion", explosionTime);
 			}
 
 		}
