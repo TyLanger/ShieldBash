@@ -7,8 +7,17 @@ public class ChildCollision : MonoBehaviour {
 	EnemyController parentController;
 
 	void Start() {
-		parentController = GetComponentInParent<EnemyController> ();
+		if (GetComponentInParent<EnemyController> () != null) {
+			parentController = GetComponentInParent<EnemyController> ();
+		}
 		gameObject.SetActive (false);
+	}
+
+	void Update()
+	{
+		if (GetComponentInParent<EnemyController> () == null) {
+			parentController = GetComponentInParent<EnemyController> ();
+		}
 	}
 
 	void OnTriggerEnter(Collider col) {

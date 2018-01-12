@@ -19,7 +19,17 @@ public class MapGen : MonoBehaviour {
 	public Vector3 testPoint;
 	int[,] map;
 
-	void Start() {
+	AstarNode[,] nodeMap;
+
+	// Entity spawning
+	public GameObject player;
+	public int spawnX, spawnY;
+	// default to bottom-left-most room
+	Room playerSpawnRoom;
+	public GameObject[] enemies;
+	public int numEnemies;
+
+	void Awake() {
 		GenerateMap();
 		/*
 		if (isWalkable (testPoint)) {
@@ -33,15 +43,59 @@ public class MapGen : MonoBehaviour {
 		}*/
 	}
 
-	void Update() {
-		
+	void Start()
+	{
+		SpawnEntities ();
 	}
 
+	void SpawnEntities()
+	{
+		// spawn player(s)
+		// -2 is to spawn the player on the ground plane
+		// world points have their y at 2
+		// for some reason.... maybe it can be fixed?
+		// need to eliminte that to get the player to look like they're on the ground
+		// increasing scale makes the walls deeper. The top of the wall never moves
+		Instantiate(player, CoordToWorldPoint(new Coord(14,14)) + new Vector3(0, -2*transform.localScale.y, 0), transform.rotation);
 
+		// spawn enemies
+		for (int i = 0; i < numEnemies; i++) {
+			int x;
+			int y;
+			do{
+				x = UnityEngine.Random.Range (5, width - 5);
+				y = UnityEngine.Random.Range (5, height - 5);
+				// keep trying for a valid spot to spawn an enemy
+				// don't spawn in walls (==1)
+				// don't spawn too near the player
+			} while (map [x, y] == 1 || ((x < 2*(spawnX+8)) && (y < 2*(spawnY+8))));
+			//Debug.LogFormat ("Spawn at ({0}, {1})", x, y);
+			//Coord randPoint = new Coord (UnityEngine.Random.Range (5, width - 5), UnityEngine.Random.Range (5, height - 5));
+
+			var enemyCopy = Instantiate (enemies [0], CoordToWorldPoint (new Coord (x, y)) + new Vector3(0, -2*transform.localScale.y, 0), transform.rotation);
+			enemyCopy.GetComponent<EnemyController>().updatePathfinding (this);
+		}
+	}
+
+	void CarveStartRoom()
+	{
+		if ((spawnX > 0 && spawnX < (width - 1)) && (spawnY > 0 && spawnY < (height - 1))) {
+			// spawnX and spawnY are inside the grid and not on the edge
+			for (int x = spawnX; x < spawnX + 8; x++) {
+				for (int y = spawnY; y < spawnY + 8; y++) {
+					// 7 by 7 square
+					map[x,y] = 0;
+				}
+			}
+		}
+	}
 
 	void GenerateMap() {
 		map = new int[width,height];
+		nodeMap = new AstarNode[width, height];
 		RandomFillMap();
+
+		CarveStartRoom ();
 
 		for (int i = 0; i < 5; i ++) {
 			SmoothMap();
@@ -56,15 +110,18 @@ public class MapGen : MonoBehaviour {
 			for (int y = 0; y < borderedMap.GetLength(1); y ++) {
 				if (x >= borderSize && x < width + borderSize && y >= borderSize && y < height + borderSize) {
 					borderedMap[x,y] = map[x-borderSize,y-borderSize];
+					nodeMap [x-borderSize, y-borderSize] = new AstarNode (borderedMap [x, y] == 0, CoordToWorldPoint (new Coord (x-borderSize, y-borderSize)), x-borderSize, y-borderSize);
 				}
 				else {
 					borderedMap[x,y] =1;
 				}
+
 			}
 		}
 
 		MeshGen meshGen = GetComponent<MeshGen>();
 		meshGen.GenerateMesh(borderedMap, 1);
+
 	}
 
 	void ProcessMap() {
@@ -91,6 +148,7 @@ public class MapGen : MonoBehaviour {
 			}
 			else {
 				survivingRooms.Add(new Room(roomRegion, map));
+				//survivingRooms[0]
 			}
 		}
 		survivingRooms.Sort ();
@@ -245,6 +303,13 @@ public class MapGen : MonoBehaviour {
 		return line;
 	}
 
+	public AstarNode WorldPointToAstarNode(Vector3 point)
+	{
+		Coord c = WorldPointToCoord (point);
+		// walkable if map is 0 at that point
+		return nodeMap[c.tileX, c.tileY];//new AstarNode(map[c.tileX, c.tileY] == 0, CoordToWorldPoint(c), c.tileX, c.tileY);
+	}
+
 	public Vector3 AdjustToGridPoint(Vector3 point)
 	{
 		return CoordToWorldPoint (WorldPointToCoord (point));
@@ -253,7 +318,7 @@ public class MapGen : MonoBehaviour {
 	Vector3 CoordToWorldPoint(Coord tile) {
 		// 79
 		// -64 + 0.5f + 79 = 15.5
-		return new Vector3 (-width / 2 + .5f + tile.tileX, 2, -height / 2 + .5f + tile.tileY);
+		return new Vector3 ((-width/ 2 + .5f + tile.tileX)*transform.localScale.x, 2, (-height / 2 + .5f + tile.tileY)*transform.localScale.z);
 	}
 
 	Coord WorldPointToCoord(Vector3 pos)
@@ -261,8 +326,8 @@ public class MapGen : MonoBehaviour {
 		if (isInMap (pos)) {
 			int x;
 			int z;
-			x = Mathf.RoundToInt ((pos.x-0.5f) + (width / 2));
-			z = Mathf.RoundToInt ((pos.z-0.5f) + (height / 2));
+			x = Mathf.RoundToInt (((pos.x/transform.localScale.x)-0.5f) + (width / 2));
+			z = Mathf.RoundToInt (((pos.z/transform.localScale.z)-0.5f) + (height / 2));
 
 			x = (int)Mathf.Clamp (x, 0, map.GetLength (0));
 			z = (int)Mathf.Clamp (z, 0, map.GetLength (1));
@@ -275,8 +340,8 @@ public class MapGen : MonoBehaviour {
 	public bool isInMap(Vector3 point)
 	{
 		Vector3 mapCenter = transform.position;
-		Vector3 mapBottomLeft = transform.position + new Vector3 (-width / 2, 2, -height / 2);
-		Vector3 mapTopRight = transform.position + new Vector3 (width / 2, 2, height / 2);
+		Vector3 mapBottomLeft = transform.position + new Vector3 ((-width*transform.localScale.x) / 2, 2, (-height*transform.localScale.z) / 2);
+		Vector3 mapTopRight = transform.position + new Vector3 ((width*transform.localScale.x) / 2, 2, (height*transform.localScale.z) / 2);
 
 		//Debug.LogFormat ("BottomLeft: {0} Point: {1} Top Right: {2}", mapBottomLeft, point, mapTopRight);
 
@@ -305,9 +370,29 @@ public class MapGen : MonoBehaviour {
 		return true;
 	}
 
+	public List<AstarNode> GetNeighbours(AstarNode node)
+	{
+		List<AstarNode> neighbourList = new List<AstarNode> ();
+		// check if the neighbours are walkable
+		if (nodeMap [node.xGrid + 1, node.yGrid].walkable) {
+			neighbourList.Add (nodeMap[node.xGrid + 1, node.yGrid]);
+		}
+		if (nodeMap [node.xGrid, node.yGrid + 1].walkable) {
+			neighbourList.Add (nodeMap[ node.xGrid, node.yGrid+1]);
+		}
+		if (nodeMap [node.xGrid-1, node.yGrid].walkable) {
+				neighbourList.Add (nodeMap[node.xGrid-1, node.yGrid]);
+		}
+		if (nodeMap [node.xGrid, node.yGrid-1].walkable) {
+				neighbourList.Add (nodeMap[ node.xGrid, node.yGrid-1]);
+		}
+		return neighbourList;
+	}
+	/* swapping over to AstarNode instead of Vector3
 	public List<Vector3> GetNeighbours(Vector3 point)
 	{
 		return GetNeighbours (WorldPointToCoord (point));
+
 	}
 
 	List<Vector3> GetNeighbours(Coord c)
@@ -331,7 +416,7 @@ public class MapGen : MonoBehaviour {
 			Debug.Log ("No neighbours at " + c.tileX + "," + c.tileY);
 		}
 		return neighbourList;
-	}
+	}*/
 
 	List<List<Coord>> GetRegions(int tileType) {
 		List<List<Coord>> regions = new List<List<Coord>> ();
@@ -406,17 +491,22 @@ public class MapGen : MonoBehaviour {
 	}
 
 	void SmoothMap() {
+		// make a new array
+		// writing to the array that you are checking for neighbours poisons it as you go
+		int[,] smoothMap = map;
 		for (int x = 0; x < width; x ++) {
 			for (int y = 0; y < height; y ++) {
 				int neighbourWallTiles = GetSurroundingWallCount(x,y);
 
 				if (neighbourWallTiles > 4)
-					map[x,y] = 1;
+					smoothMap[x,y] = 1;
 				else if (neighbourWallTiles < 4)
-					map[x,y] = 0;
+					smoothMap[x,y] = 0;
 
 			}
 		}
+
+		map = smoothMap;
 	}
 
 	int GetSurroundingWallCount(int gridX, int gridY) {
@@ -455,6 +545,7 @@ public class MapGen : MonoBehaviour {
 		public int roomSize;
 		public bool isAccessibleFromMainRoom;
 		public bool isMainRoom;
+
 
 		public Room() {
 		}

@@ -30,7 +30,7 @@ public class MovementController : MonoBehaviour {
 
 	Vector3 moveDirection;
 	Vector3 targetLocation;
-	Vector3 lastTookDamageFrom;
+
 
 	// CC effects
 	// pulls and pushes
@@ -152,10 +152,7 @@ public class MovementController : MonoBehaviour {
 		return false;
 	}
 
-	public void tookDamage(Vector3 pointTookDamageFrom)
-	{
-		targetLocation = pointTookDamageFrom;
-	}
+
 
 	public virtual Vector3 getAiTargetMoveLocation()
 	{

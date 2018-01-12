@@ -14,6 +14,8 @@ public class EnemyAI : MonoBehaviour {
 	float timeBetweenCombatDecisions = 0.05f;
 	float timeOfNextDecision = 0;
 	bool inCombat = false;
+	float timeOutOfCombat;
+	float memoryTime = 5;
 
 	EnemyController enemyController;
 
@@ -26,7 +28,9 @@ public class EnemyAI : MonoBehaviour {
 	void Start () {
 		debugText.text = "";
 		enemyAction = RandomWalk;
-		playerTrans = FindObjectOfType<PlayerController> ().transform;
+		if (FindObjectOfType<PlayerController> () != null) {
+			playerTrans = FindObjectOfType<PlayerController> ().transform;
+		}
 		enemyController = GetComponent<EnemyController> ();
 		//Invoke ("EnemyDecision", 2);
 		enemyController.onDeath += reset;
@@ -35,11 +39,25 @@ public class EnemyAI : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+		// for testing pathing
+		/*
+		if (Input.GetButtonDown ("Jump")) {
+			MoveTowardsPlayer ();
+		}
+		*/
+		if (playerTrans == null) {
+			playerTrans = FindObjectOfType<PlayerController> ().transform;
+		}
+
 		if (Time.time > timeOfNextDecision) {
 			makeDecision ();
 
 		}
 
+		if (Time.time > timeOutOfCombat && inCombat) {
+			Debug.Log("Anger timed out");
+			inCombat = false;
+		}
 	}
 
 	void makeDecision()
@@ -71,37 +89,50 @@ public class EnemyAI : MonoBehaviour {
 		// inside the if, stopAttacking is called which sets attacking to false
 		// attackPlayer sets attacking to true after a 0.05s delay
 		// therefore, the enemy gets stuck attacking forever and can't move
+		timeOutOfCombat = Time.time + memoryTime;
 		enemyController.attackPlayer ();
 	}
 
 	void MoveTowardsPlayer()
 	{
-		enemyController.playerFound ();
+		
+		enemyController.playerFound (aggroDist);
 		if (Vector3.Distance (transform.position, playerTrans.position) < attackDist) {
 			enemyAction = Attack;
-		} else if(Vector3.Distance (transform.position, playerTrans.position) > aggroDist) {
+		} else if(Vector3.Distance (transform.position, playerTrans.position) > aggroDist && !inCombat) {
 			enemyAction = RandomWalk;
 		}
-
 	}
 
 	void tookDamage()
 	{
+		
+		timeOutOfCombat = Time.time + memoryTime;
+		if (!inCombat) {
+			inCombat = true;
+		}
 		// if the enemy is randomly walking then takes damage from the player,
 		// move towards the player
 		// this is the same as when the player comes into aggro range
 		// potentially should make aggro range larger
 		// or have a different aggro system so when the player pulls aggro, the enemy does something. Then make this method flag the aggro
 		if (enemyAction == RandomWalk) {
+			// assuming the player did the damage
+			// probably needs to be an event instead of a delegate to pass where the damage came from
+			enemyController.tookDamage (playerTrans.position);
 			enemyAction = MoveTowardsPlayer;
 			// also call enemyAction immediately so there is no delay
-			makeDecision();
+			makeDecision ();
+
 		}
 	}
 
 	void reset()
 	{
+		inCombat = false;
+		timeOutOfCombat = 0;
 		enemyAction = RandomWalk;
+		timeOfNextDecision = Time.time + timeBetweenDecisions;
 	}
 
 	void OnDrawGizmos()

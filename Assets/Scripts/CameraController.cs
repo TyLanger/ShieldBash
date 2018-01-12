@@ -9,12 +9,18 @@ public class CameraController : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		playerTrans = FindObjectOfType<PlayerController> ().transform;
+		if (FindObjectOfType<PlayerController> () != null) {
+			playerTrans = FindObjectOfType<PlayerController> ().transform;
+		}
 		//offset = new Vector3 (0, 12, -10);
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		transform.position = playerTrans.position + offset;
+		if (playerTrans == null) {
+			playerTrans = FindObjectOfType<PlayerController> ().transform;
+		} else {
+			transform.position = playerTrans.position + offset;
+		}
 	}
 }

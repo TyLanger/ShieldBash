@@ -5,30 +5,10 @@ using System.Linq;
 
 public class EnemyController : MovementController {
 
-	/* In parent
-	[System.Serializable]
-	public struct Slow {
-		public float percent;
-		public float endTime;
-
-		public Slow(float p, float duration)
-		{
-			percent = p;
-			endTime = Time.time + duration;
-		}
-
-	};
-	*/
-
-
 	public delegate void deathDelegate();
 	public deathDelegate onDeath;
 
 	Transform player;
-	/* in parent
-	public float moveSpeed = 0.5f;
-	float originalMoveSpeed;
-	*/
 
 	public bool attacking = false;
 	public bool rootedForAttack = false;
@@ -52,32 +32,55 @@ public class EnemyController : MovementController {
 	Vector3 spawnPoint;
 	float spawnRadius = 5;
 
-	/* in parent
-	bool beingPulled = false;
-	float pullSpeedMultiplier = 4;
-	Vector3 pullTargetPos;
-	*/
+	float maxSightDistance;
+	Astar astar;
+	MapGen mapGen;
+	List<Vector3> path;
+	//public bool pathFinding = false;
+	bool pathingToPlayer = false;
+	bool pathingToSpawn = false;
 
 	public Transform weapon;
 	Animator weaponAnim;
 	public GameObject swordArc;
 
 	Health health;
-
+	public int state = 0;
 
 	// Use this for initialization
 	protected override void Start () {
 		base.Start ();
-		player = FindObjectOfType<PlayerController> ().transform;
+		if (FindObjectOfType<PlayerController> () != null) {
+			player = FindObjectOfType<PlayerController> ().transform;
+		}
 		spawnPoint = transform.position;
 		weaponAnim = weapon.GetComponent<Animator> ();
 		health = GetComponent<Health> ();
 		health.onDeath += die;
+		astar = GetComponent<Astar> ();
+		if (mapGen != null && astar != null) {
+			astar.mapGen = mapGen;
+		}
+		if (!astar.isWalkable (spawnPoint)) {
+			Debug.Log ("Bad spawn");
+		}
 
+	}
+
+	public void updatePathfinding(MapGen _mapGen)
+	{
+		mapGen = _mapGen;
+		if (astar != null) {
+			astar.mapGen = _mapGen;
+		}
 	}
 	
 	// Update is called once per frame
 	protected override void FixedUpdate () {
+
+		if (player == null) {
+			player = FindObjectOfType<PlayerController> ().transform;
+		}
 
 		if (rootedForAttack) {
 			transform.LookAt (player);
@@ -93,28 +96,73 @@ public class EnemyController : MovementController {
 
 	public override Vector3 getAiTargetMoveLocation ()
 	{
-		if (randomWalk) {
-			transform.LookAt (randomPoint);
-			if (Time.time > timeOfNextRandomWalk) {
-				// every timeBetweenRandomWalks (default 2 seconds) find a random point near the spawn point.
-				// move towards that point
-				timeOfNextRandomWalk = Time.time + timeBetweenRandomWalks;
-				// pick a random angle
-				randomAngle = Random.Range (0, 2 * Mathf.PI);
-				// turn that random angle into a position on the unit circle
-				// multiply by a radius to get a point inside the circle of the spawn point.
-				// the spawn circle is a circle of radius spawnRadius around the spawn point
-				randomPoint = spawnPoint + new Vector3 (Mathf.Cos (randomAngle), 0, Mathf.Sin (randomAngle)) * Random.Range (0, spawnRadius);
-			}
-
-			Debug.DrawLine (transform.position, randomPoint);
-			return randomPoint;
-		} else {
-			// only look at the player when moving
-			// and only when moving towards player
-			transform.LookAt (player);
-			return player.transform.position;
+		if (canSeeTarget (player, maxSightDistance)) {
+			// can see the player, go to the player
+			state = 1;
+			// not pathing right now, travelling by sight
+			notPathing ();
+			return player.position;
 		}
+
+		// else follow the path if there is one
+		if (path != null) {
+			if (path.Count > 0) {
+				state = 2;
+
+				if (path.Count > 1) {
+					if (canSee (path [1])) {
+						// if you can see the next point, delete the current point so you go to that one instead
+						path.RemoveAt (0);	
+					}
+				}
+
+				if ((path.Count == 1) && (Vector3.Distance (transform.position, path [0]) < 0.3f)) {
+					state = 3;
+					// at the last point
+					//pathFinding = false;
+					path.RemoveAt (0);
+					// at the last point, so not pathing anymore
+					notPathing ();
+				}
+				else
+				{
+					transform.LookAt (path [0]);
+					return path [0];
+				}
+			}
+		}
+
+		// can't see the player, no path
+		// try to go towards spawn if you can see it
+		if (canSee (spawnPoint)) {
+			if (randomWalk) {
+				//pathFinding = false;
+				notPathing ();
+				state = 4;
+				// this can't exactly just switch to pathfinding
+				// then when it is right beside a wall, it will sometimes try to path around the wall and then back to the spawn
+				// that might work because it changes random walk every few seconds anyway...
+				transform.LookAt (randomPoint);
+				if (Time.time > timeOfNextRandomWalk) {
+					// every timeBetweenRandomWalks (default 2 seconds) find a random point near the spawn point.
+					// move towards that point
+					timeOfNextRandomWalk = Time.time + timeBetweenRandomWalks;
+					// pick a random angle
+					randomAngle = Random.Range (0, 2 * Mathf.PI);
+					// turn that random angle into a position on the unit circle
+					// multiply by a radius to get a point inside the circle of the spawn point.
+					// the spawn circle is a circle of radius spawnRadius around the spawn point
+					randomPoint = spawnPoint + new Vector3 (Mathf.Cos (randomAngle), 0, Mathf.Sin (randomAngle)) * Random.Range (0, spawnRadius);
+				}
+
+				Debug.DrawLine (transform.position, randomPoint);
+				return randomPoint;
+			}
+		}
+
+		state = 5;
+		// base case: stay where you are
+		return transform.position;	
 	}
 
 	public void die()
@@ -123,18 +171,83 @@ public class EnemyController : MovementController {
 		transform.position = spawnPoint;
 		attacking = false;
 		rootedForAttack = false;
+		path = null;
+		notPathing ();
 		health.resetHealth ();
 		onDeath ();
 	}
 
-	public void playerFound()
+	public void tookDamage(Vector3 pointTookDamageFrom)
 	{
+		//targetLocation = pointTookDamageFrom;
+		// gets a path that the ai can use to get to the pathLastTookDamageFrom to investigate
+		// path has lower priority than line of sight
+		if (!canSeeTarget (player, maxSightDistance)) {
+			Debug.Log ("Took Damage made a path");
+			path = astar.FindPath (transform.position, pointTookDamageFrom);
+		}
+		//pathFinding = true;
+	}
+
+	bool canSee(Vector3 point)
+	{
+		return canSee (point, Vector3.Distance (point, transform.position));
+	}
+
+	bool canSee(Vector3 point, float maxDistance)
+	{
+		RaycastHit hit;
+		if (Physics.Raycast (transform.position, (point - transform.position), out hit, maxDistance)) {
+
+			// hit something
+			return false;
+
+		}
+		return true;
+	}
+
+	bool canSeeTarget(Transform target, float maxDistance)
+	{
+		RaycastHit hit;
+		if (Physics.Raycast (transform.position, (target.position - transform.position), out hit, maxDistance)) {
+			if (hit.transform == target) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public void playerFound(float sightDist)
+	{
+		maxSightDistance = sightDist;
+		if (!canSeeTarget (player, maxSightDistance) && !pathingToPlayer) {
+			// found the player, but can't see them; path to them
+			Debug.Log ("PlayerFound made a path");
+			path = astar.FindPath (transform.position, player.position);
+			pathingToPlayer = true;
+		}
 		randomWalk = false;
 	}
 
 	public void playerLost()
 	{
 		randomWalk = true;
+		// if you can't see the spawn,
+		// set path back to spawn
+		// and are not already pathing to spawn
+		if (!canSee (spawnPoint) && !pathingToSpawn) {
+			Debug.Log ("PlayerLost made a path");
+			path = astar.FindPath (transform.position, spawnPoint);
+			pathingToSpawn = true;
+		}
+	}
+
+	void notPathing()
+	{
+		// clear pathing variables so the next time a path is needed,
+		// a new path is created
+		pathingToPlayer = false;
+		pathingToSpawn = false;
 	}
 
 	bool attackCooldownOver()
