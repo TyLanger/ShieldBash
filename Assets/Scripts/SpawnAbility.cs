@@ -19,5 +19,6 @@ public class SpawnAbility : Ability {
 			projectileController.moveTo (aimPoint, spawnPoint.gameObject);
 			projectileController.setAbility (this);
 		}
+		abilityFinished ();
 	}
 }

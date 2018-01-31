@@ -23,8 +23,11 @@ public class MovementAbility : Ability {
 				Vector3 clampedAimPoint = spawnPoint.position + lineToAimPoint * maxMoveDistance;
 				self.GetComponent<MovementController> ().setDisplacementLocation (clampedAimPoint);
 			}
-
-			aoeAbility.useAbility (spawnPoint, aimPoint);
+			if (aoeAbility != null) {
+				aoeAbility.useAbility (spawnPoint, aimPoint);
+			}
 		}
+		// maybe the ability should be over when the dash ends (i.e. you reach the end of it)
+		abilityFinished ();
 	}
 }

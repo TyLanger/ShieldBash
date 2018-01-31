@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class Ability : MonoBehaviour {
 
@@ -47,6 +48,7 @@ public class Ability : MonoBehaviour {
 	protected GameObject self;
 	//public AbilityType abilityType;
 
+	public event Action abilityOver;
 
 	public virtual void useAbility()
 	{
@@ -58,6 +60,15 @@ public class Ability : MonoBehaviour {
 		// default case is to ignore the variables and juse use the ability without them
 		// if the ability wants to use the variables, it will extend this
 		useAbility ();
+	}
+
+	protected void abilityFinished()
+	{
+		// called when one ability is over
+		// now another ability can be used
+		if (abilityOver != null) {
+			abilityOver();
+		}
 	}
 
 	public void additionalEffects(GameObject g)

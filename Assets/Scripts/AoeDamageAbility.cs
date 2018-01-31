@@ -50,6 +50,7 @@ public class AoeDamageAbility : Ability {
 			}
 
 		}
+		abilityFinished ();
 	}
 
 	void disableExplosion()

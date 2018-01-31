@@ -30,7 +30,7 @@ public class MovementController : MonoBehaviour {
 
 	Vector3 moveDirection;
 	Vector3 targetLocation;
-
+	public Vector3 inputDirection;
 
 	// CC effects
 	// pulls and pushes
@@ -41,7 +41,8 @@ public class MovementController : MonoBehaviour {
 	public List<Slow> slowList;
 
 	// stuns
-	bool isStunned = false;
+	protected bool isStunned = false;
+
 	float stunEndTime;
 
 	// root
@@ -97,7 +98,10 @@ public class MovementController : MonoBehaviour {
 					// found a slow that has time left
 					// adjust the moveSpeed based on the original move speed
 					// this code is run every frame so moveSpeed *= slow makes the move speed slow down more and more every frame
+					// use the first slow in the list
+					// when slows are added to the list, it is sorted with the larget % slow first
 					currentMoveSpeed = originalMoveSpeed * ((100 - slowList[0].percent) / 100f);
+					// break if you find one slow that still has time left
 					break;
 				}
 				// a slow may have been removed. Check again if there are slows in the list
@@ -152,7 +156,19 @@ public class MovementController : MonoBehaviour {
 		return false;
 	}
 
+	public void LookAt(Vector3 point)
+	{
+		if (!isStunned) {
+			transform.LookAt (point);
+		}
+	}
 
+	public void LookAt(Transform transformToLookAt)
+	{
+		if (!isStunned) {
+			transform.LookAt (transformToLookAt);
+		}
+	}
 
 	public virtual Vector3 getAiTargetMoveLocation()
 	{
@@ -162,7 +178,8 @@ public class MovementController : MonoBehaviour {
 	public virtual Vector3 getPlayerTargetMoveLocation()
 	{
 		// this will usually be based on input
-		return transform.position + new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
+		inputDirection = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
+		return transform.position + inputDirection;
 
 		// it may change if the player uses a movement ability
 	}
@@ -180,6 +197,9 @@ public class MovementController : MonoBehaviour {
 		slowList.Add(new Slow(slowPercent, slowDuration));
 		// sort the slowList
 		// y.CompareTo(x) because want bigger numbers at the start of the list
+		// a heap would probably be a better data structure given we always want the largest slow
+		// in practise, i doubt there will be enough slows at any one time to make much of a difference.
+		// likely only have 0 to 4 slows at any one time (pure speculation very early(Jan 12, 2018) on in development)
 		slowList.Sort((x, y) => y.percent.CompareTo(x.percent));
 	}
 

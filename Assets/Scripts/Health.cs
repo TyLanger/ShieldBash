@@ -38,9 +38,11 @@ public class Health : MonoBehaviour {
 		if (damageOverTime) {
 			if (timeOfNextDamage < Time.time) {
 				timeOfNextDamage = Time.time + dotInterval;
-				takeDamage (dotDamage);
+
 				if (dotEndTime < Time.time) {
 					damageOverTime = false;
+				} else {
+					takeDamage (dotDamage);
 				}
 
 			}

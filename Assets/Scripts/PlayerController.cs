@@ -33,18 +33,28 @@ public class PlayerController : MovementController {
 	*/
 
 	bool shielding = false;
+	public bool useShieldAttack = true;
 
+	bool usingAbility = false;
+
+	public Ability m1Ability;
+	public Ability m2Ability;
 	public Ability qAbility;
+	public Ability spaceAbility;
 	public Ability eAbility;
 	public Ability rAbility;
 	public Ability fAbility;
 
 	Vector3 lookPoint;
+	// lock the ability to turn the player while using abilities
+	bool canLook = true;
 
 	// Use this for initialization
 	protected override void Start () {
 		base.Start ();
-		shieldAnim = shield.GetComponent<Animator> ();
+		if (shield != null) {
+			shieldAnim = shield.GetComponent<Animator> ();
+		}
 		spawnPoint = transform.position;
 		myHealth = GetComponent<Health> ();
 		// when the health component decides the player dies, get it to call die in this script
@@ -57,14 +67,28 @@ public class PlayerController : MovementController {
 
 		if (Input.GetButtonDown ("Fire1")) {
 			// left click
-			if (Time.time > timeOfLastAttack + timeBetweenAttacks) {
-				timeOfLastAttack = Time.time;
-				shieldBash ();
+			if (useShieldAttack) {
+				if (Time.time > timeOfLastAttack + timeBetweenAttacks) {
+					timeOfLastAttack = Time.time;
+					shieldBash ();
+				}
+			} else {
+				if (!usingAbility) {
+					StartAbility (0);
+					m1Ability.useAbility (transform, lookPoint);
+				}
 			}
 		}
 		if(Input.GetButtonDown("Fire2")) {
 			// right click
-			shielding = true;
+			if (useShieldAttack) {
+				shielding = true;
+			} else {
+				if (!usingAbility) {
+					StartAbility (1);
+					m2Ability.useAbility (transform, lookPoint);
+				}
+			}
 		}
 		if (Input.GetButtonUp ("Fire2")) {
 			shielding = false;
@@ -72,19 +96,39 @@ public class PlayerController : MovementController {
 		if (Input.GetButtonDown ("Ability1") ) {
 			// default q
 			// set the point where it should spawn and the place it should travel to
-			qAbility.useAbility (transform, lookPoint);
+			if (!usingAbility) {
+				StartAbility (2);
+				qAbility.useAbility (transform, lookPoint);
+			}
+		}
+		if (Input.GetButtonDown ("Jump") ) {
+			// default space
+
+			if (!usingAbility) {
+				StartAbility (3);
+				spaceAbility.useAbility (transform, lookPoint);
+			}
 		}
 		if (Input.GetButtonDown ("Ability2")) {
 			// default e
-			eAbility.useAbility(transform, lookPoint);
+			if (!usingAbility) {
+				StartAbility (4);
+				eAbility.useAbility (transform, lookPoint);
+			}
 		}
 		if (Input.GetButtonDown ("Ability3")) {
 			// default r
-			rAbility.useAbility(transform, lookPoint);
+			if (!usingAbility) {
+				StartAbility (5);
+				rAbility.useAbility (transform, lookPoint);
+			}
 		}
 		if (Input.GetButtonDown ("Ability4")) {
 			// default f
-			fAbility.useAbility(transform, lookPoint);
+			if (!usingAbility) {
+				StartAbility (6);
+				fAbility.useAbility (transform, lookPoint);
+			}
 		}
 	}
 	
@@ -92,43 +136,73 @@ public class PlayerController : MovementController {
 	protected override void FixedUpdate () {
 		
 		base.FixedUpdate ();
+		// don't rotate the player while using an ability
+		// so you can't move the hitbox after you've aimed the abilty
+		// this may be a little heavy-handed. Would rather have the player stop rotating after a certain point in the ability
+		if (!usingAbility) {
+			Ray cameraRay = Camera.main.ScreenPointToRay (Input.mousePosition);
+			Plane eyePlane = new Plane (Vector3.up, new Vector3 (0, 0, 0));
+			float cameraDist;
 
-		Ray cameraRay = Camera.main.ScreenPointToRay (Input.mousePosition);
-		Plane eyePlane = new Plane(Vector3.up, new Vector3(0, 0, 0));
-		float cameraDist;
-
-		if (eyePlane.Raycast (cameraRay, out cameraDist)) {
-			lookPoint = cameraRay.GetPoint (cameraDist);
-			// use the tansform pos instead of the look point for the y so the player doesn't try to look down.
-			transform.LookAt (new Vector3(lookPoint.x, transform.position.y, lookPoint.z));
+			if (eyePlane.Raycast (cameraRay, out cameraDist)) {
+				lookPoint = cameraRay.GetPoint (cameraDist);
+				// use the tansform pos instead of the look point for the y so the player doesn't try to look down.
+				transform.LookAt (new Vector3 (lookPoint.x, transform.position.y, lookPoint.z));
+			}
 		}
-
 
 	}
 
 	public override Vector3 getPlayerTargetMoveLocation()
 	{
-		return transform.position + new Vector3 (Input.GetAxisRaw ("Horizontal"), 0, Input.GetAxisRaw ("Vertical"));
-		/* dashing doesn't work at the moment
-		if (!dashing) {
-			return new Vector3 (Input.GetAxisRaw ("Horizontal"), 0, Input.GetAxisRaw ("Vertical"));
-		} else {
-			// if the dash button is pressed while standing still, the player can get stuck
-			// the code after the || should safeguard against that
-			// Dash should be redone with the new MovementController
-			// moveDirection used to be based on input
-			if ((Vector3.Distance (transform.position, dashStart) > dashDistance) || (moveDirection.magnitude < 0.1f)) {
-				moveSpeed /= dashSpeedMultiplier;
-				dashing = false;
-			}
-
-
-		}*/
+		//return transform.position + new Vector3 (Input.GetAxisRaw ("Horizontal"), 0, Input.GetAxisRaw ("Vertical"));
+		inputDirection = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
+		return transform.position + inputDirection;
 	}
 
 	public override bool isPlayer()
 	{
 		return true;
+	}
+
+	void StartAbility (int abilityIndex)
+	{
+		usingAbility = true;
+		Ability currentAbility = m1Ability;
+
+		switch (abilityIndex) {
+		case 0:
+			currentAbility = m1Ability;
+			break;
+		case 1:
+			currentAbility = m2Ability;
+			break;
+		case 2:
+			currentAbility = qAbility;
+			break;
+		case 3:
+			currentAbility = spaceAbility;
+			break;
+		case 4:
+			currentAbility = eAbility;
+			break;
+		case 5:
+			currentAbility = rAbility;
+			break;
+		case 6:
+			currentAbility = fAbility;
+			break;
+		}
+		// make sure the index was valid
+		if (abilityIndex >= 0 && abilityIndex < 7)
+		{
+			currentAbility.abilityOver += EndAbility;
+		}
+	}
+
+	void EndAbility()
+	{
+		usingAbility = false;
 	}
 
 	void shieldBash()
@@ -168,20 +242,6 @@ public class PlayerController : MovementController {
 	{
 		return shielding;
 	}
-
-	/*
-	void dashAbility()
-	{
-		//Debug.Log ("Dashing");
-		dashing = true;
-		//moveSpeed *= dashSpeedMultiplier;
-		dashStart = transform.position;
-
-		// dash in direction of mouse
-		// moveDirection = new Vector3(
-		Debug.Log(lookPoint - transform.position );
-		//moveDirection = lookPoint - transform.position;
-	}*/
 
 	public void die()
 	{

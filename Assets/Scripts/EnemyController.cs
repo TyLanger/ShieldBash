@@ -40,7 +40,7 @@ public class EnemyController : MovementController {
 	bool pathingToPlayer = false;
 	bool pathingToSpawn = false;
 
-	public Transform weapon;
+	public GameObject weapon;
 	Animator weaponAnim;
 	public GameObject swordArc;
 
@@ -55,6 +55,7 @@ public class EnemyController : MovementController {
 		}
 		spawnPoint = transform.position;
 		weaponAnim = weapon.GetComponent<Animator> ();
+		weapon = GetComponentInChildren<BoxCollider> ().gameObject;
 		health = GetComponent<Health> ();
 		health.onDeath += die;
 		astar = GetComponent<Astar> ();
@@ -83,12 +84,15 @@ public class EnemyController : MovementController {
 		}
 
 		if (rootedForAttack) {
-			transform.LookAt (player);
+			// use MovementController.LookAt() instead of transform.LookAt
+			// MovementController version accounts for not looking while stunned
+			LookAt (player);
 			// if attacking, stop moving
 
-		} else if(attacking) {
+		} else if(attacking || swordArc.activeSelf) {
 			
 		} else {
+			LookAt (player);
 			base.FixedUpdate();
 		}
 
@@ -126,7 +130,7 @@ public class EnemyController : MovementController {
 				}
 				else
 				{
-					transform.LookAt (path [0]);
+					LookAt (path [0]);
 					return path [0];
 				}
 			}
@@ -142,7 +146,7 @@ public class EnemyController : MovementController {
 				// this can't exactly just switch to pathfinding
 				// then when it is right beside a wall, it will sometimes try to path around the wall and then back to the spawn
 				// that might work because it changes random walk every few seconds anyway...
-				transform.LookAt (randomPoint);
+				LookAt (randomPoint);
 				if (Time.time > timeOfNextRandomWalk) {
 					// every timeBetweenRandomWalks (default 2 seconds) find a random point near the spawn point.
 					// move towards that point
@@ -250,12 +254,102 @@ public class EnemyController : MovementController {
 		pathingToSpawn = false;
 	}
 
+	public void attackPlayer()
+	{
+		if (attackCooldownOver () && !isStunned) {
+			//timeOfNextAttack = Time.time + timeBetweenAttacks;
+			StartCoroutine (AttacK ());
+		}
+	}
+
+	// All attack code in one method
+	// IEnumerator instead of stringing methods together with Invoke
+	// Invoke may be slightly more readable
+	// But this works over time which works for lerp
+	IEnumerator AttacK()
+	{
+		Vector3 weaponOriginalPosition = weapon.transform.localPosition; 
+		Quaternion weaponOriginalRotation = weapon.transform.localRotation;
+		// move sword to start position and start rotation
+		// move over time timeToGetToStartPos
+		float timeToGetToStartPos = 0.7f;
+		Vector3 weaponStartOffset = new Vector3 (0.5f, 0, 0.5f);
+		Vector3 weaponStartRotation = new Vector3 (1, 0, 2);
+		Quaternion weaponStartLocalRotation = Quaternion.FromToRotation (Vector3.forward, weaponStartRotation.normalized);
+		// The time the sword hangs at the start position before it swings
+		float timeOfStartDelay = 0.2f;
+		// the time it takes to get from the start of the swing to the end position
+		// how long the sword actually takes to swing
+		float timeToEndPoint = 0.6f;
+		Vector3 weaponEndOffset = new Vector3 (-0.5f, 0, 0.5f);
+		Vector3 weaponEndRotation = new Vector3 (-2, 0, 1);
+		Quaternion weaponEndLocalRotation = Quaternion.FromToRotation (Vector3.forward, weaponEndRotation.normalized);
+		// amount of time the sword hangs at the end of the swing
+		float recoveryTime = 0.6f;
+		// some shorthand variables
+		// just sums of other variables
+		// game time at the start of the attack
+		float timeOfStartAttack = Time.time;
+		// time when the weapon start swinging
+		float timeAtSweepStart = timeOfStartAttack + timeToGetToStartPos + timeOfStartDelay;
+		float timeAtSweepEnd = timeAtSweepStart + timeToEndPoint;
+		// total time of the attack
+		float timeOfEndAttack = timeOfStartAttack + timeToGetToStartPos + timeOfStartDelay + timeToEndPoint + recoveryTime;
+		timeBetweenAttacks = timeToGetToStartPos + timeOfStartDelay + timeToEndPoint + recoveryTime;
+		timeOfNextAttack = Time.time + timeBetweenAttacks;
+
+		while (Time.time < timeOfEndAttack) {
+			if (Time.time < timeOfStartAttack + timeToGetToStartPos) {
+				// getting the sword into posiiton
+				// t = 0 at Time.time
+				// t = 1 at Time.time + timeToGetToStartPos
+				weapon.transform.localPosition = Vector3.Lerp (weapon.transform.localPosition, weaponStartOffset, (Time.time - timeOfStartAttack) / timeToGetToStartPos);
+				weapon.transform.localRotation = Quaternion.Lerp (weapon.transform.localRotation, weaponStartLocalRotation, (Time.time - timeOfStartAttack) / timeToGetToStartPos);
+				// if having a custom animation
+				// weaponAnim.SetFloat("WeaponToStartPosition", (Time.time - timeOfStartAttack) / timeToGetToStartPos);
+				// keep updating the percent the animation should be at
+				// Maybe would be a blend tree?
+				// first option is the first animation
+				// as the time changes, goes through the animations, switching animations when the time gets past the thresholds
+			} else if (Time.time < timeAtSweepStart) {
+				// hold position
+				// this is probably a good time to have the last time the enemy can re-aim the attack
+				// i.e. enemy no longer looks at the player after this
+				if (!rootedForAttack) {
+					rootedForAttack = true;
+				}
+			} else if (Time.time < timeAtSweepEnd) {
+				// swing the sword
+				// turn on the hit box
+				if (!swordArc.activeSelf)
+					swordArc.gameObject.SetActive (true);
+				
+				weapon.transform.localPosition = Vector3.Lerp (weapon.transform.localPosition, weaponEndOffset, (Time.time - timeAtSweepStart) / timeToEndPoint);
+				weapon.transform.localRotation = Quaternion.Lerp (weapon.transform.localRotation, weaponEndLocalRotation, (Time.time - timeAtSweepStart) / timeToEndPoint);
+			} else if (Time.time < timeOfEndAttack) {
+				// delay time at the end of the swing
+				// turn off the collider
+				if (swordArc.activeSelf)
+					swordArc.gameObject.SetActive (false);
+				// return weapon to its default position
+				weapon.transform.localPosition = Vector3.Lerp(weapon.transform.localPosition, weaponOriginalPosition, (Time.time - timeAtSweepEnd) / recoveryTime);
+				weapon.transform.localRotation = Quaternion.Lerp (weapon.transform.localRotation, weaponOriginalRotation, (Time.time - timeAtSweepEnd) / recoveryTime);
+				if (rootedForAttack) {
+					rootedForAttack = false;
+				}
+			}
+
+			yield return null;
+		}
+		//rootedForAttack = false;
+	}
+
 	bool attackCooldownOver()
 	{
 		return Time.time > timeOfNextAttack;
 	}
 
-	public void attackPlayer()
+	public void attackPlayer1()
 	{
 		if (attackCooldownOver()) {
 			timeOfNextAttack = Time.time + timeBetweenAttacks;
