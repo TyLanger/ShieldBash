@@ -139,14 +139,21 @@ public class PlayerController : MovementController {
 		// don't rotate the player while using an ability
 		// so you can't move the hitbox after you've aimed the abilty
 		// this may be a little heavy-handed. Would rather have the player stop rotating after a certain point in the ability
-		if (!usingAbility) {
+		// this makes the player unable to adjust their aim during the ability cast time
+		//
 			Ray cameraRay = Camera.main.ScreenPointToRay (Input.mousePosition);
 			Plane eyePlane = new Plane (Vector3.up, new Vector3 (0, 0, 0));
 			float cameraDist;
 
-			if (eyePlane.Raycast (cameraRay, out cameraDist)) {
-				lookPoint = cameraRay.GetPoint (cameraDist);
-				// use the tansform pos instead of the look point for the y so the player doesn't try to look down.
+		if (eyePlane.Raycast (cameraRay, out cameraDist)) {
+			lookPoint = cameraRay.GetPoint (cameraDist);
+			// use the tansform pos instead of the look point for the y so the player doesn't try to look down.
+			if (!usingAbility) {
+				// don't rotate the player while using an ability
+				// this is kind of a bandaid fix for now.
+				// It stops the melee ability from being abused by rotating the player to extend the hitbox
+				// but it means the player can aim projectiles during their cast time. However, the model won't rotate to show this
+				// will make it look weird if i ever get models and animations
 				transform.LookAt (new Vector3 (lookPoint.x, transform.position.y, lookPoint.z));
 			}
 		}
@@ -158,6 +165,11 @@ public class PlayerController : MovementController {
 		//return transform.position + new Vector3 (Input.GetAxisRaw ("Horizontal"), 0, Input.GetAxisRaw ("Vertical"));
 		inputDirection = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
 		return transform.position + inputDirection;
+	}
+
+	public override Vector3 getAimPoint()
+	{
+		return lookPoint;
 	}
 
 	public override bool isPlayer()
@@ -196,19 +208,30 @@ public class PlayerController : MovementController {
 		// make sure the index was valid
 		if (abilityIndex >= 0 && abilityIndex < 7)
 		{
+			// -= to clear the EndAbility before you add it
+			// -= works even when abilityOver is empty (i.e. the first time the ability is used)
+			// without the -=, EndAbility will be called many times as the ability is used more
+			// (The 100th time the ability is cast, EndAbility is called 100 times because abilityOver has 100 instances of EndAbility)
+			currentAbility.abilityOver -= EndAbility;
 			currentAbility.abilityOver += EndAbility;
+
+			currentAbility.slowMovement -= SelfSlow;
+			currentAbility.slowMovement += SelfSlow;
 		}
 	}
 
+
+
 	void EndAbility()
 	{
+		// currentAbility.abilityOver -= EndAbility;
 		usingAbility = false;
 	}
 
 	void shieldBash()
 	{
 
-		shieldAnim.SetTrigger ("smashTrigger");
+		shieldAnim.SetTrigger ("smashTrigger"	);
 
 		// fire out rays from the shield to see if it hits anything
 		RaycastHit hit;

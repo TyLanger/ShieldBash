@@ -49,6 +49,8 @@ public class Ability : MonoBehaviour {
 	//public AbilityType abilityType;
 
 	public event Action abilityOver;
+	public event Action<bool> aimPermission; 
+	public event Action<int> slowMovement;
 
 	public virtual void useAbility()
 	{
@@ -60,6 +62,25 @@ public class Ability : MonoBehaviour {
 		// default case is to ignore the variables and juse use the ability without them
 		// if the ability wants to use the variables, it will extend this
 		useAbility ();
+	}
+
+	protected void allowAiming(bool choice)
+	{
+		// called by the ability when the character has to stop aiming and commit to the ability
+		// all it should really do is stop the aim indicator from moving
+		// also maybe stop the player from rotating
+		// the ability should just save where the aim point was at the moment it is needed.
+		if (aimPermission != null) {
+			aimPermission (choice);
+		}
+	}
+
+	protected void selfSlow(int slowPercent)
+	{
+		// called by the ability if the ability requires the caster to slow down or stop to cast it
+		if (slowMovement != null) {
+			slowMovement (slowPercent);
+		}
 	}
 
 	protected void abilityFinished()

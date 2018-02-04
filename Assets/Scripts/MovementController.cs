@@ -27,6 +27,7 @@ public class MovementController : MonoBehaviour {
 
 	public float currentMoveSpeed;
 	float originalMoveSpeed;
+	int selfSlowPercent = 0;
 
 	Vector3 moveDirection;
 	Vector3 targetLocation;
@@ -147,7 +148,8 @@ public class MovementController : MonoBehaviour {
 			// otherwise could get jumpy on frame skips
 			// more of a problem in Update. FixedUpdate should be fine. 
 			// fixedDeltaTime should always be the same (0.250 or whatever it is)
-			transform.position = Vector3.MoveTowards (transform.position, targetLocation, currentMoveSpeed * Time.fixedDeltaTime);
+			// if being displaced, ignore the self slow
+			transform.position = Vector3.MoveTowards (transform.position, targetLocation, ((currentMovementType == MovementType.BeingDisplaced)?1:((100 - selfSlowPercent)/100f)) * currentMoveSpeed * Time.fixedDeltaTime);
 		}
 	}
 
@@ -182,6 +184,21 @@ public class MovementController : MonoBehaviour {
 		return transform.position + inputDirection;
 
 		// it may change if the player uses a movement ability
+	}
+
+	public virtual Vector3 getAimPoint()
+	{
+		return Vector3.zero;
+	}
+
+	protected void SelfSlow(int slowPercent)
+	{
+		// this just overrides the old slowPercent
+		// this could potentially lead to bugs in the future.
+		// as it is currently, there is no way to tell what the source of a self slow is
+		// right now, using abilities can slow the character as part of their cast time
+		// and abilities cannot be used simultaneously; one needs to finish before another can start
+		selfSlowPercent = slowPercent;
 	}
 
 	public void setDisplacementLocation(Vector3 position)
