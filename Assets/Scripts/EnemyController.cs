@@ -164,6 +164,12 @@ public class EnemyController : MovementController {
 			}
 		}
 
+		// this can get triggered when the player throws a projectile in front of the enemy
+		// the enemy can no longer see the player (projectile is in the way)
+		// but they could see the player a moment ago (so there is not path)
+		// with canSeeTarget incorporating the target's layer and the obstacle layer, this shouldn't happen
+		// will probably happen when a new target is made (not the player) like a player-allied npc. 
+		// To fix, the ally npc needs to be on a different layer than the projectiles
 		state = 5;
 		// base case: stay where you are
 		return transform.position;	
@@ -212,8 +218,9 @@ public class EnemyController : MovementController {
 
 	bool canSeeTarget(Transform target, float maxDistance)
 	{
+		int layerMask = LayerMask.GetMask ("Obstacle", LayerMask.LayerToName(target.gameObject.layer));
 		RaycastHit hit;
-		if (Physics.Raycast (transform.position, (target.position - transform.position), out hit, maxDistance)) {
+		if (Physics.Raycast (transform.position, (target.position - transform.position), out hit, maxDistance, layerMask)) {
 			if (hit.transform == target) {
 				return true;
 			}

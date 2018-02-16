@@ -9,6 +9,8 @@ public class ProjectileController : MonoBehaviour {
 	protected float apexHeight = 2;
 	public float timeAlive = 2f;
 
+	public bool destroyAtMaxDistance = false;
+
 	protected Vector3 spawnPoint;
 	protected Vector3 movePosition;
 	bool moving = false;
@@ -35,7 +37,8 @@ public class ProjectileController : MonoBehaviour {
 				maxTimeReached ();
 			}
 			if (Vector3.Distance (transform.position, movePosition) < 0.1f) {
-				GetComponent<SphereCollider> ().enabled = false;
+				GetComponent<Collider> ().enabled = false;
+				maxDistanceReached ();
 			}
 			timeAlive -= Time.deltaTime;
 			transform.position = Vector3.MoveTowards (transform.position, movePosition, moveSpeed);
@@ -62,8 +65,17 @@ public class ProjectileController : MonoBehaviour {
 		Destroy (gameObject);
 	}
 
+	void maxDistanceReached()
+	{
+		// destroy the object in 0.5f sec
+		// gives it some time to come to a stop, not just dissappear
+		Invoke ("maxTimeReached", 0.5f);
+	}
+
 	void reflect(GameObject reflector)
 	{
+		// old code from when the player class had a shield
+		// may prove useful again in the future
 		caster = reflector;
 		moveSpeed *= -1;
 	}
@@ -79,11 +91,6 @@ public class ProjectileController : MonoBehaviour {
 		} else if (col.CompareTag ("Obstacle")) {
 			// don't go through walls
 			maxTimeReached ();
-		} else if (col.CompareTag ("Shield")) {
-			if(col.GetComponent<Shield>().isShielding())
-			{
-				reflect (col.gameObject.transform.parent.gameObject);
-			}
 		}
 	}
 
@@ -97,12 +104,6 @@ public class ProjectileController : MonoBehaviour {
 		// set the ability that fired this projectile
 		// it has the code to do the additional effects (stun, slow, etc.)
 		parentAbility = a;
-	}
-
-	void OnDrawGizmos()
-	{
-		//Gizmos.DrawSphere (transform.position, 1f);
-		Gizmos.DrawWireSphere (transform.position, 0.5f);
 	}
 
 }
